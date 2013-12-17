@@ -18,7 +18,7 @@ Route::group(array('before'=>'auth'), function(){
 Route::controller('/admin', 'AdminController');
 
 //Front
-Route::controller('/', 'HomeController');
+Route::controller('/', 'SiteController');
 
 //Filters
 Route::filter('auth', function(){

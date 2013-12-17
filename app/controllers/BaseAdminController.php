@@ -2,12 +2,16 @@
 
 class BaseAdminController extends Controller {
 	protected $model;
-	protected $view;
-	protected $uploads = array();
-	protected $rules = array();
-	protected $orderBy = array('field'=>null, 'order'=>'ASC');
-	protected $layout = 'layout.admin';
-	protected $base = 'admin';
+	protected $controllerName;
+	protected $uploads 			= array();
+	protected $except 			= array();
+	protected $aditionalData 	= array();
+	protected $rules 			= array();
+	protected $orderBy 			= array('field'=>null, 'order'=>'ASC');
+	protected $layout 			= 'layout.admin';
+	protected $base 			= 'admin';
+	protected $view 			= 'add';
+	protected $list 			= 'list';
 	
 	/**
 	 * Setup the layout used by the controller.
@@ -21,28 +25,49 @@ class BaseAdminController extends Controller {
 		{
 			$this->layout = View::make($this->layout);
 		}
+		
+		$this->controllerName = strtolower( str_replace('Controller', '', get_class($this) ) );
+	}
+	
+	public function getIndex(){
+		return Redirect::to( BasePath::getPath('listagem') );
 	}
 	
 	public function getAdicionar($id=0)
 	{
+		$data = array();
 		$id = (int)$id;
 		$formModel;
 		
 		$formModel = $id>0 ? $this->model->find($id) : $this->model;
 		
-		if( empty($this->orderBy['field']) )
-			$list = $this->model->all();
-		else
-			$list = $this->model->orderBy($this->orderBy['field'], $this->orderBy['order'])->get();
+		$data['model'] = $formModel;
+		$data['controllerName'] = $this->controllerName;
 		
-		/*var_dump($this->layout);
-		var_dump($this->base.'/'.$this->view);
-		die('done');*/
+		$data = array_merge($data, $this->aditionalData);
 		
-		return View::make($this->base.'/'.$this->view)
-					->with('model', $formModel)
-					->with('list', $list)
-					->with('primaryName', $this->model->getKeyName());
+		$viewPath = $this->base.'.'.$this->controllerName.'.'.$this->view;
+		return View::make($viewPath, $data);
+	}
+	
+	public function getListagem($filter=null, $order='ASC'){
+		$data = array();
+		
+		$list = $this->model;
+		
+		if( !empty($list) ){
+			$list->orderBy($filter, $order);
+		}
+		
+		$list->paginate(10);
+		
+		$data['list'] = $list->get();
+		$data['pagination'] = $list->links();
+		$data['controllerName'] = $this->controllerName;
+		$data = array_merge($data, $this->aditionalData);
+		
+		$viewPath = $this->base.'.'.$this->controllerName.'.'.$this->list;
+		return View::make($viewPath, $data);
 	}
 	
 	public function postAdicionar($id=0){
@@ -70,10 +95,7 @@ class BaseAdminController extends Controller {
 		$rules = $this->rules;
 		
 		$validator = Validator::make(Input::all(), $rules);
-		if($validator->fails()){
-			Input::flash();
-			return Redirect::to( URL::current() )->withErrors($validator);
-		}else{
+		if( $validator->passes() ){
 			$files = FileUpload::batch($this->uploads, 'temp');
 			
 			$data = array();
@@ -94,7 +116,7 @@ class BaseAdminController extends Controller {
 				}
 			}
 						
-			$this->model->fill(Input::except(''));
+			$this->model->fill(Input::except($this->except));
 			
 			foreach ($files as $key => $filename) {
 				if( !empty($filename) ){
@@ -115,6 +137,9 @@ class BaseAdminController extends Controller {
 			
 			$path = implode('/', $segments);
 			return Redirect::to( $path );
+		}else{
+			Input::flash();
+			return Redirect::to( URL::current() )->withErrors($validator);
 		}
 	}
 

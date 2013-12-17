@@ -12,7 +12,7 @@ var ajaxRequest = {
 		message_text_wrapper: $('<p></p>'),
 		loader_selector: '.ajaxrequest-loader',
 		status_success: 'alert-success',
-		status_error: 'alert-error',
+		status_error: 'alert-error alert-danger',
 		status_default: 'alert-info'
 	},
 	

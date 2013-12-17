@@ -67,4 +67,8 @@ class Json {
 	public function import($json){
 		$this->setProperties( json_decode($json, true) );
 	}
+	
+	public function __toString(){
+		return $this->getJson();
+	}
 }
