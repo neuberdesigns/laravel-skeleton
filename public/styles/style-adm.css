@@ -1,0 +1,21 @@
+textarea { resize: none }
+
+ul { 
+	list-style: none;
+	margin: 0;
+}
+
+.margin-top { margin-top: 10px }
+
+.footer { text-align: center }
+
+.login {
+	margin: 40px auto 0;
+	padding: 20px;
+	float: none;
+	border: 1px solid #CCC;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+}
