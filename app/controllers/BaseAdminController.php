@@ -2,6 +2,7 @@
 
 class BaseAdminController extends Controller {
 	protected $model;
+	protected $modelRow;
 	protected $controllerName;
 	protected $uploads 			= array();
 	protected $except 			= array();
@@ -26,7 +27,10 @@ class BaseAdminController extends Controller {
 			$this->layout = View::make($this->layout);
 		}
 		
-		$this->controllerName = strtolower( str_replace('Controller', '', get_class($this) ) );
+		if( empty($controllerName) ){
+			$segs = explode('/', BasePath::getPath());
+			$this->controllerName = end($segs);
+		}
 	}
 	
 	public function getIndex(){
@@ -34,11 +38,10 @@ class BaseAdminController extends Controller {
 	}
 	
 	public function getAdicionar($id=0)
-	{
+	{		
 		$data = array();
 		$id = (int)$id;
 		$formModel;
-		
 		$formModel = $id>0 ? $this->model->find($id) : $this->model;
 		
 		$data['model'] = $formModel;
@@ -46,8 +49,44 @@ class BaseAdminController extends Controller {
 		
 		$data = array_merge($data, $this->aditionalData);
 		
-		$viewPath = $this->base.'.'.$this->controllerName.'.'.$this->view;
+		$viewPath = $this->base.'.'.$this->getControllerName().'.'.$this->view;
 		return View::make($viewPath, $data);
+	}
+	
+	public function postAdicionar($id=0){
+		$id = (int)$id;		
+		
+		//Validation rules
+		$rules = $this->rules;
+		
+		$this->beforeValidator($id, $validator);
+		$validator = Validator::make(Input::all(), $rules);
+		$validator->passes();
+		$this->afterValidator($id, $validator);
+		
+		$validatorResult = $validator->errors()->isEmpty();
+		
+		if( $validatorResult ){
+			$files = FileUpload::batch($this->uploads, 'temp');
+			$this->modelRow = $this->model->find($id);
+			
+			if( !empty($this->modelRow) ){
+				$this->deleteOldUploads($files);
+			}else{
+				$this->modelRow = $this->model;
+			}
+			$this->modelRow->fill( Input::except($this->except) );
+			$this->makeUploads($files);
+			
+						
+			if( $this->modelRow->save() ){
+			}			
+			
+			return $this->successRedirect();
+		}else{
+			Input::flash();
+			return Redirect::to( URL::current() )->withErrors($validator);
+		}
 	}
 	
 	public function getListagem($filter=null, $order='ASC'){
@@ -55,23 +94,19 @@ class BaseAdminController extends Controller {
 		
 		$list = $this->model;
 		
-		if( !empty($list) ){
-			$list->orderBy($filter, $order);
+		if( !empty($filter) ){
+			$list = $list->orderBy($filter, $order);
 		}
 		
-		$list->paginate(10);
+		$pagination = $list->paginate(30);
 		
-		$data['list'] = $list->get();
-		$data['pagination'] = $list->links();
+		$data['pagination'] = $pagination->links();
+		$data['list'] = $pagination->getItems();
 		$data['controllerName'] = $this->controllerName;
 		$data = array_merge($data, $this->aditionalData);
 		
-		$viewPath = $this->base.'.'.$this->controllerName.'.'.$this->list;
+		$viewPath = $this->base.'.'.$this->getControllerName().'.'.$this->list;
 		return View::make($viewPath, $data);
-	}
-	
-	public function postAdicionar($id=0){
-		return $this->persist($id);
 	}
 	
 	public function getDeletar($id){
@@ -86,61 +121,49 @@ class BaseAdminController extends Controller {
 		}
 		
 		return Redirect::to($uri);
+	}	
+	
+	
+	
+	protected function getControllerName(){
+		return strtolower( str_replace('Controller', '', get_class($this) ) );
 	}
 	
-	protected function persist($id=0){
-		$id = (int)$id;
-		
-		//Validation rules
-		$rules = $this->rules;
-		
-		$validator = Validator::make(Input::all(), $rules);
-		if( $validator->passes() ){
-			$files = FileUpload::batch($this->uploads, 'temp');
-			
-			$data = array();
-			
-			if( $id>0 ){
-				$data = $this->model->find($id);
-				if( !empty($data) ){
-					$this->model = $data;
-					
-					if( !empty($files) ){
-						foreach( $this->uploads as $k=>$v ){
-							if( !empty($files[$k]) ){
-								FileUpload::delete($this->model->$v);
-								$this->model->$v = null;
-							}
-						}
+	protected function deleteOldUploads($files){
+		if( !empty($this->modelRow) ){
+			if( !empty($files) ){
+				foreach( $this->uploads as $k=>$v ){
+					if( !empty($files[$k]) ){
+						FileUpload::delete($this->modelRow->$v);
+						$this->model->$v = null;
 					}
 				}
 			}
-						
-			$this->model->fill(Input::except($this->except));
-			
-			foreach ($files as $key => $filename) {
-				if( !empty($filename) ){
-					$fieldName = $this->uploads[$key];
-					$this->model->$fieldName = $filename;
-				}
-			}
-			
-			if( $this->model->save() ){
-				FileUpload::moveBatch($files);
-			}
-			
-			
-			$segments = Request::segments();
-			$last = end($segments);
-			if( !is_numeric($last) )
-				array_push($segments, $this->model->getKey() );
-			
-			$path = implode('/', $segments);
-			return Redirect::to( $path );
-		}else{
-			Input::flash();
-			return Redirect::to( URL::current() )->withErrors($validator);
 		}
 	}
-
+	
+	protected function makeUploads($files){
+		foreach ($files as $key => $filename) {
+			if( !empty($filename) ){
+				$fieldName = $this->uploads[$key];
+				$this->modelRow->$fieldName = $filename;
+			}
+		}
+		FileUpload::moveBatch($files);
+	}
+	
+	protected function successRedirect(){
+		$segments = Request::segments();
+		$last = end($segments);
+		if( !is_numeric($last) )
+			array_push($segments, $this->modelRow->getKey() );
+		
+		$path = implode('/', $segments);
+		
+		return Redirect::to( $path );
+	}	
+	
+	protected function beforeValidator($id=null, &$validator=null){}
+	
+	protected function afterValidator($id=null, &$validator=null){}
 }

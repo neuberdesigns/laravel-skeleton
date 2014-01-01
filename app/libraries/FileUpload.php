@@ -55,14 +55,16 @@ class FileUpload {
 			return URL::asset( UPLOAD_DIR.MISSING_IMG );
 	}
 	
-	public static function getTim( $filename, $width=null, $height=null, $attribs=array() ){
+	public static function getTim( $filename, $width=null, $height=null, $attribs=array(), $zc=2 ){
 		$tim = new Timthumb();
-		$tim->setZc(2);
+		$tim->setZc($zc);
 		$tim->setWidth($width);
 		$tim->setHeight($height);
 		$tim->setBase(URL::to('').'/');
 		
-		return HTML::image( $tim->thumb(self::get($filename), null, null, false), null, $attribs );
+		$alt = isset($attribs['alt']) ? $attribs['alt'] : null;
+		
+		return HTML::image( $tim->thumb(self::get($filename), null, null, false), $alt, $attribs );
 	}
 	
 	public static function delete($filename){
