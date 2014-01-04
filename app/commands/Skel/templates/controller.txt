@@ -1,0 +1,10 @@
+<?php
+class {controller}Controller extends BaseAdminController {
+	public function __construct(){
+		$this->model = new {controller}();
+		$this->uploads = array();
+		$this->rules = array(
+			''=>'',
+		);
+	}
+}
