@@ -7,49 +7,68 @@
 	{{HTML::style('styles/bootstrap.min.css')}}
 	{{HTML::style('styles/bootstrap-glyphicons.css')}}
 	{{HTML::style('styles/style-adm.css')}}
+	@yield('styles')
 	
 	<script type="text/javascript">var baseUrl = '{{URL::to("/")}}/';</script>
 	<script type="text/javascript">var baseUrlAdmin = '{{URL::to("/admin")}}/';</script>
+	
+	@yield('head')
 </head>
 <body>
 	<div id="header" class="container">
 		<header class="row">
-			<nav class="col-lg-12">
-				<ul class="nav navbar-nav">
-				@section('navigation')
-					<li class="dropdown {{Request::is('admin/home*') ? 'active' : ''}}">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-							Home
-							<b class="caret"></b>
-						</a>
-						<ul class="dropdown-menu">
-							<li>
-								{{HTML::link('admin','Inicio')}}
+			<nav class="navbar navbar-inverse" role="navigation">
+				<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+						<span class="sr-only">Alterar Navegação</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+				</div>
+				
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						@section('navigation')
+							<li class="dropdown {{Request::is('admin/home*') ? 'active' : ''}}">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+									Home
+									<b class="caret"></b>
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										{{HTML::link('/','Ver Site', array('target'=>'_blank') )}}
+									</li>
+									
+									<li>
+										{{HTML::link('admin','Inicio')}}
+									</li>
+								</ul>
 							</li>
-						</ul>
-					</li>
-					
-					<li class="dropdown {{Request::is('admin/*') ? 'active' : ''}}">
-						{{HTML::link('admin/controller/action','Title')}}
-					</li>
-					
-					<li class="dropdown {{Request::is('admin/*') ? 'active' : ''}}">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-							Section
-							<b class="caret"></b>
-						</a>
-						<ul class="dropdown-menu">
-							<li>
-								{{HTML::link('admin/controller/action','Title')}}
+							
+							<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
+								{{HTML::link('admin/controller/listagem','Title')}}
 							</li>
-						</ul>
-					</li>
-					
-					<li>
-						{{HTML::link('admin/logout', 'Sair')}}
-					</li>
-				@show
-				</ul>
+							
+							<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+									Section
+									<b class="caret"></b>
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										{{HTML::link('admin/controller/listagem','Title')}}
+									</li>
+								</ul>
+							</li>
+							
+							<li class="">
+								{{HTML::link('admin/logout', 'Sair')}}
+							</li>
+						@show
+					</ul>
+				</div>
 			</nav>
 		</header>	
 	</div><!-- END #header -->
@@ -82,9 +101,11 @@
 	{{HTML::script('scripts/tinyMceConfig.js')}}
 	
 	{{HTML::script('scripts/ajaxRequest.js')}}
-	{{HTML::script('scripts/multi-image.js')}}
 	{{HTML::script('scripts/default.js')}}
-	
+	{{HTML::script('scripts/multi-image.js')}}
+	@yield('scripts')
 	{{HTML::script('scripts/interface-adm.js')}}
+	
+	@yield('footer')
 </body>
 </html>

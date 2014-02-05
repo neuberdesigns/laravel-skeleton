@@ -51,7 +51,7 @@ class BuildControllers extends Command {
 			$controllerName = ucwords( str_replace('_', ' ', $tableName) );
 			$controllerName = str_replace(' ', '', $controllerName);
 			
-			$columns = DB::select('SHOW COLUMNS FROM '.$tableName);
+			$columns = DB::select('SHOW COLUMNS FROM `'.$tableName.'`');
 			foreach( $columns as $column ){
 				if( $column->Key == 'PRI' )
 					$primary = $column->Field;
@@ -66,9 +66,9 @@ class BuildControllers extends Command {
 			
 			$createFile = false;
 			
-			$modelPath = app_path().'/controllers/admin/'.$controllerName.'.php';
+			$modelPath = app_path().'/controllers/admin/'.$controllerName.'Controller.php';
 			if( file_exists($modelPath) ){
-				if( $this->confirm('Controller '.$controllerName.'.php exists, replace it? [y|n] n ', false) ){
+				if( $this->confirm('Controller '.$controllerName.'Controller.php exists, replace it? [y|n] n ', false) ){
 					$createFile = true;
 				}
 			}else{

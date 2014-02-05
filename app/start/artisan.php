@@ -14,3 +14,4 @@
 Artisan::add(new BuildModels);
 Artisan::add(new BuildControllers);
 Artisan::add(new BuildLayout);
+Artisan::add(new BuildView);

@@ -26,13 +26,9 @@ $app->redirectIfTrailingSlash();
 |
 */
 
-$env = $app->detectEnvironment(function(){
-	if( isset($_SERVER['USER']) || $_SERVER['SERVER_NAME']=='localhost' ){
-		return 'local';
-	}else{
-		return $_SERVER['SERVER_NAME'];
-	}
-});
+$env = $app->detectEnvironment(array(
+	'local' => array('localhost'),
+));
 
 /*
 |--------------------------------------------------------------------------

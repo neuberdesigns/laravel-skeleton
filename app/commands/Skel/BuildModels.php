@@ -52,7 +52,7 @@ class BuildModels extends Command {
 			$modelName = str_replace(' ', '', $modelName);
 		
 			
-			$columns = DB::select('SHOW COLUMNS FROM '.$tableName);
+			$columns = DB::select('SHOW COLUMNS FROM `'.$tableName.'`');
 			foreach( $columns as $column ){
 				if( $column->Key == 'PRI' )
 					$primary = $column->Field;

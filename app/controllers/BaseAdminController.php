@@ -110,7 +110,7 @@ class BaseAdminController extends Controller {
 	}
 	
 	public function getDeletar($id){
-		$uri = BasePath::getPath('adicionar');
+		$uri = BasePath::getPath('listagem');
 		
 		$row = $this->model->find($id);
 		if( !empty($row) ){
