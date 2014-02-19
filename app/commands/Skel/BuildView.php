@@ -39,14 +39,20 @@ class BuildView extends Command {
 	{
 		$dbName = DB::getDatabaseName();
 		$tables = DB::select('SHOW TABLES');
+		$targetTable = $this->option('table');
 		
-		foreach( $tables as $table ){
+		
+		foreach( $tables as $table ){			
 			$primary = 'id';
 			$timestamps = 'false';
 			$hasTimestamps = 0;
 			
 			$fullTableName = 'Tables_in_'.$dbName;
 			$tableName = $table->$fullTableName;
+			$createFile = false;
+			
+			if( !empty($targetTable) && $tableName!=$targetTable)
+				continue;
 			
 			//studly_case()
 			$controllerName = ucwords( str_replace('_', ' ', $tableName) );
@@ -62,30 +68,34 @@ class BuildView extends Command {
 				if( $column->Key == 'PRI' || $column->Key == 'MUL' || $column->Field=='updated_at' || $column->Field=='deleted_at' )
 					continue;
 				
+				
 				$size = 5;
 				$inputType = 'text';
 				$inputList = array();
 				
 				//starts_with();
-				$type = substr($column->Type, 0, strpos($column->Type, '('));
-								
+				$end = strpos($column->Type, '(');
+				$end = $end!==false ? $end : strlen($column->Type);
+				$type = substr($column->Type, 0, $end);
+				
 				//get content between () if exists
 				$start = strpos($column->Type, '(');
 				$end = strrpos($column->Type, ')');
 				if( $start!==false && $end!==false ){
 					$length = ( strlen($column->Type)-$start-2);
 					$parentesisContent = substr($column->Type, $start+1, $length );
-					
-					//var_dump($column->Field, "$start | $end | $length | $parentesisContent");
-					//1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37
-					//e n u m ( ' r e q  u  e  s  t  '  ,  '  c  a  n  c  e  l ' , '  i  n  v  i  t  e  '  )
 				}
 				
 				//if is a numeric value set the size
 				if( is_numeric($parentesisContent) ){
 					$size = $parentesisContent;
-					if( $size>12 )
-						$size = 12;
+					if( $size > 10 ){
+						while( $size>10 ){
+							$size = $size/3;
+						}
+						$size = floor($size);
+					}
+						
 					
 				}else{
 					//set the $inputList based on the contents of $parentesisContent
@@ -104,11 +114,11 @@ class BuildView extends Command {
 				}else if( $type=='enum' ){
 					$inputType = 'select';
 					
-				}elseif( str_contains($type, 'image') ){
+				}else if( str_contains($column->Field, 'image') ){
 					$inputType = 'file';
 					$size = 10;
 				}
-				
+								
 				$fieldsList[$k]['name'] = $column->Field;
 				$fieldsList[$k]['type'] = $inputType;
 				$fieldsList[$k]['size'] = $size;
@@ -121,6 +131,7 @@ class BuildView extends Command {
 					$createFile = true;
 				}
 			}else{
+				mkdir($viewPath.$dirName, 0775);
 				$createFile = true;
 			}
 			
@@ -141,24 +152,32 @@ class BuildView extends Command {
 						$fieldsFormStr .= "\t\t";
 					}
 					
-					$fieldsListStr .= "<th>{{OrderLink::make('$field[name], '$field[name]')}}</th>".PHP_EOL;
+					$fieldsListStr .= "<th>{{OrderLink::make('".strtoupper($field['name'])."', '$field[name]')}}</th>".PHP_EOL;
 					$fieldsNameStr .= '<td>{{$row->'.$field['name'].'}}</td>'.PHP_EOL;
 					
-					//make($fieldName, $label, $size=2, $fieldType='text', $fieldParams=array(), $labelParams=array(), $aditionalParams=array()){
-					$fieldsFormStr .= "{{BsFormField::make('$field[name], '$field[name]', $field[size], '$field[type]'";
-					
-					
-					if( !empty($field['values']) ){
-						$fieldsFormStr .= ", null, null, array('list'=>array(".PHP_EOL;
-						
-						foreach($field['values'] as $v){
-							$fieldsFormStr .= "\t\t\t\t\t$v=>$v,".PHP_EOL;
-						}
-											
-						$fieldsFormStr .= "\t\t\t\t) ".PHP_EOL;
-						$fieldsFormStr .= "\t\t)}}".PHP_EOL;
+					if( str_contains($field['name'], 'status') ){
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".strtoupper($field['name'])."', 2, 'select', null, null array( 'list'=>array(
+									'1'=>'Ativo',
+									'0'=>'Inativo',
+								)
+						) ) }}".PHP_EOL;
 					}else{
-						$fieldsFormStr .= ')}}'.PHP_EOL;
+						//make($fieldName, $label, $size=2, $fieldType='text', $fieldParams=array(), $labelParams=array(), $aditionalParams=array()){
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".strtoupper($field['name'])."', $field[size], '$field[type]'";
+						
+						
+						if( !empty($field['values']) ){
+							$fieldsFormStr .= ", null, null, array('list'=>array(".PHP_EOL;
+							
+							foreach($field['values'] as $v){
+								$fieldsFormStr .= "\t\t\t\t\t$v=>$v,".PHP_EOL;
+							}
+												
+							$fieldsFormStr .= "\t\t\t\t) ".PHP_EOL;
+							$fieldsFormStr .= "\t\t)}}".PHP_EOL;
+						}else{
+							$fieldsFormStr .= ')}}'.PHP_EOL;
+						}
 					}
 					
 					
@@ -167,7 +186,6 @@ class BuildView extends Command {
 				$templateList = str_replace( array('{fieldsList}', '{fieldsName}'), array($fieldsListStr, $fieldsNameStr), $templateList);
 				$templateAdd = str_replace( '{fieldsForm}', $fieldsFormStr, $templateAdd);
 				
-				mkdir($viewPath.$dirName, 0766);
 				file_put_contents($viewPath.$dirName.'/list.blade.php', $templateList);
 				file_put_contents($viewPath.$dirName.'/add.blade.php', $templateAdd);
 				$this->info('created views in "'.$dirName.'"');
@@ -182,10 +200,7 @@ class BuildView extends Command {
 	 */
 	protected function getArguments()
 	{
-		return array(
-			array('css-dir', InputArgument::OPTIONAL, 'CSS directory name', 'styles'),
-			array('js-dir', InputArgument::OPTIONAL, 'Java Script directory name', 'scripts'),
-		);
+		return array();
 	}
 
 	/**
@@ -196,7 +211,7 @@ class BuildView extends Command {
 	protected function getOptions()
 	{
 		return array(
-			array('file', 'f', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'file to join in order they are passed', array('../template/includes/topo.php', '../template/includes/rodape.php') ),
+			array('table', 't', InputOption::VALUE_OPTIONAL, 'Create views for epecified Table', null),
 		);
 	}
 

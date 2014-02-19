@@ -59,6 +59,10 @@ class Json {
 		return json_encode($this->getProperties());
 	}
 	
+	public function make(){
+		return Request::json($this->getProperties(), $this->status);
+	}
+	
 	/**
 	 * Import a json string,, all previous properties will be lost
 	 * @param  string $json A json string

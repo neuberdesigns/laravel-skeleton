@@ -12,8 +12,8 @@
 */
 
 //Admin
-Route::group(array('before'=>'auth'), function(){
-	Route::controller('admin/index', 'AdminController');
+Route::group(array('before'=>'adm.auth', 'prefix'=>'admin'), function(){
+	Route::controller('index', 'AdminController');
 });
 Route::controller('/admin', 'AdminController');
 
@@ -21,7 +21,7 @@ Route::controller('/admin', 'AdminController');
 Route::controller('/', 'SiteController');
 
 //Filters
-Route::filter('auth', function(){
+Route::filter('adm.auth', function(){
 	if( Auth::guest() ) 
 		return Redirect::to('admin/login');
 });

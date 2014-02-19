@@ -13,6 +13,13 @@ class BaseAdminController extends Controller {
 	protected $base 			= 'admin';
 	protected $view 			= 'add';
 	protected $list 			= 'list';
+	protected $slugSource		= 'title';
+	protected $hasSlug 			= false;
+	
+	public function missingMethod($parameters){
+		var_dump($parameters);
+		exit;
+	}
 	
 	/**
 	 * Setup the layout used by the controller.
@@ -38,7 +45,7 @@ class BaseAdminController extends Controller {
 	}
 	
 	public function getAdicionar($id=0)
-	{		
+	{
 		$data = array();
 		$id = (int)$id;
 		$formModel;
@@ -78,7 +85,10 @@ class BaseAdminController extends Controller {
 			$this->modelRow->fill( Input::except($this->except) );
 			$this->makeUploads($files);
 			
-						
+			if( $this->hasSlug ){
+				$this->modelRow->slug = Input::get($this->slugSource);
+			}
+			//var_dump($this->modelRow->toArray());exit;
 			if( $this->modelRow->save() ){
 			}			
 			
@@ -161,7 +171,17 @@ class BaseAdminController extends Controller {
 		$path = implode('/', $segments);
 		
 		return Redirect::to( $path );
-	}	
+	}
+	
+	protected function buildSelectList($collection, $prop, $key='id'){
+		$list = array();
+		
+		foreach( $collection as $k=>$v ){
+			$list[$v->$key] = $v->$prop;
+		}
+		
+		return $list;
+	}
 	
 	protected function beforeValidator($id=null, &$validator=null){}
 	

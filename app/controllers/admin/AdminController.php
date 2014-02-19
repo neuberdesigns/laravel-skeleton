@@ -10,6 +10,7 @@ class AdminController extends BaseAdminController {
 	}
 	
 	public function getLogin(){
+		//var_dump( Hash::make('123') );
 		if( Auth::check() )
 			return Redirect::to('admin/index');
 		else
@@ -21,7 +22,7 @@ class AdminController extends BaseAdminController {
 			'email'=>Input::get('email'),
 			'password'=>Input::get('password')
 		);
-		//var_dump( Hash::make('123') );
+		
 		
 		if( Auth::attempt( $userdata ) ){
 			return Redirect::to('admin/index');

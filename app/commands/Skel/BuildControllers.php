@@ -39,6 +39,7 @@ class BuildControllers extends Command {
 	{
 		$dbName = DB::getDatabaseName();
 		$tables = DB::select('SHOW TABLES');
+		$targetTable = $this->option('table');
 		
 		foreach( $tables as $table ){
 			$primary = 'id';
@@ -47,6 +48,9 @@ class BuildControllers extends Command {
 			
 			$fullTableName = 'Tables_in_'.$dbName;
 			$tableName = $table->$fullTableName;
+			
+			if( !empty($targetTable) && $tableName!=$targetTable)
+				continue;
 			
 			$controllerName = ucwords( str_replace('_', ' ', $tableName) );
 			$controllerName = str_replace(' ', '', $controllerName);
@@ -105,7 +109,7 @@ class BuildControllers extends Command {
 	protected function getOptions()
 	{
 		return array(
-			//array('example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null),
+			array('table', 't', InputOption::VALUE_OPTIONAL, 'Create views for epecified Table', null),
 		);
 	}
 

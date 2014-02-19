@@ -83,7 +83,7 @@ class BuildLayout extends Command {
 						}
 						
 						$layoutPart = str_replace($replaceSrc, $replaceTgt, $layoutPart);
-						$layout .= "\n".$layoutPart;
+						$layout .= "\n\n<!-- JOINED HERE -->\n\n".$layoutPart;
 					}else{
 						$this->error('The file "'.$file.'" not exists');
 					}
