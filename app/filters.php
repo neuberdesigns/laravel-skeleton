@@ -17,7 +17,7 @@ App::before(function($request)
 	define('UPLOAD_DIR', 'uploads/');
 	define('UPLOAD_TEMP_DIR', 'uploads/temp/');
 	
-	define('EMAIL_RECEIVER', 'mexicanox@myopera.com');
+	define('EMAIL_RECEIVER', 'atendimento@neuberdesigns.com.br');
 	define('EMAIL_NAME', 'Neuber Oliveira');
 });
 

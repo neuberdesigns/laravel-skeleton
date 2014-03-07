@@ -1,7 +1,9 @@
 @extends('layout.admin')
 
 @section('main-content')
-	<h3>{{ucwords($controllerName)}}</h3>
+	<a href="{{URL::to('/admin/'.$controllerSegment.'/listagem')}}" class="btn btn-primary btn-lg">Voltar a Listagem</a>
+	<h3>{{ucwords( str_replace('-', ' ', $controllerSegment) )}}</h3>
+	
 	{{Form::model($model, array('class'=>'form-horizontal', 'files'=>true) )}}
 	<fieldset>
 		{fieldsForm}

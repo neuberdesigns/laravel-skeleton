@@ -1,4 +1,4 @@
 <?php
-class SiteController {
+class SiteController extends BaseController {
 	public function getIndex(){}
 } 

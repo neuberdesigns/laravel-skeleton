@@ -68,10 +68,10 @@ class BuildView extends Command {
 				if( $column->Key == 'PRI' || $column->Key == 'MUL' || $column->Field=='updated_at' || $column->Field=='deleted_at' )
 					continue;
 				
-				
 				$size = 5;
 				$inputType = 'text';
 				$inputList = array();
+				$parentesisContent = 10;
 				
 				//starts_with();
 				$end = strpos($column->Type, '(');
@@ -152,18 +152,22 @@ class BuildView extends Command {
 						$fieldsFormStr .= "\t\t";
 					}
 					
-					$fieldsListStr .= "<th>{{OrderLink::make('".strtoupper($field['name'])."', '$field[name]')}}</th>".PHP_EOL;
+					$fieldsListStr .= "<th>{{OrderLink::make('".ucfirst($field['name'])."', '$field[name]')}}</th>".PHP_EOL;
 					$fieldsNameStr .= '<td>{{$row->'.$field['name'].'}}</td>'.PHP_EOL;
 					
-					if( str_contains($field['name'], 'status') ){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".strtoupper($field['name'])."', 2, 'select', null, null array( 'list'=>array(
+					if( str_contains($field['name'], 'image') ){
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', 10, 'file' )}}".PHP_EOL;
+						$fieldsFormStr .= "\t\t{{FileUpload::getTim(\$model->".$field['name'].", 150, 150)}}".PHP_EOL;
+						
+					}elseif( str_contains($field['name'], 'status') ){
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', 2, 'select', null, null, array( 'list'=>array(
 									'1'=>'Ativo',
 									'0'=>'Inativo',
 								)
 						) ) }}".PHP_EOL;
 					}else{
 						//make($fieldName, $label, $size=2, $fieldType='text', $fieldParams=array(), $labelParams=array(), $aditionalParams=array()){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".strtoupper($field['name'])."', $field[size], '$field[type]'";
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', $field[size], '$field[type]'";
 						
 						
 						if( !empty($field['values']) ){

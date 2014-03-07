@@ -7,8 +7,10 @@ class ContactForm {
 	protected $emailField = 'email';
 	protected $submitLabel = 'Enviar';
 	protected $submitAttr = array('class'=>'btn btn-primary btn-lg');
-	protected $msgSuccess = 'Solicitação de orçamento enviada com sucesso';
-	protected $msgError = 'Ocorreu um erro ao enviar sua solicitação';
+	protected $msgSuccess = 'Contato enviado com sucesso';
+	protected $msgError = 'Ocorreu um erro ao enviar o contato';
+	protected $hasFile = false;
+	protected $fileFields = array();
 	
 	
 	public function config($confs){
@@ -17,6 +19,14 @@ class ContactForm {
 				$this->$prop = $value;
 			}
 		}
+	}
+	
+	public function set($attr, $value){
+		if( property_exists($this, $attr) ){
+			$this->$attr = $value;
+		}
+		
+		return $this;
 	}
 	
 	public function addField($label, $validation=null, $type='text', $attrs=null){
@@ -89,6 +99,21 @@ class ContactForm {
 			$message->replyTo($from, $fromName );
 			$message->from($from, $fromName);
 			$message->to($to, $toName);
+			
+			if( $this->hasFile ){
+				if( !empty($this->fileFields) && is_array($this->fileFields) ){
+					foreach( $this->fileFields as $file ){
+						$attach = Input::file($file);
+								
+						$path = public_path().'/'.UPLOAD_TEMP_DIR;
+						$filename = $attach->getClientOriginalName();
+						$pathFull = $path.$filename;
+						
+						$attach->move($path, $filename);
+						$message->attach($pathFull);
+					}
+				}
+			}
 		});
 		
 		if( $send>0 )

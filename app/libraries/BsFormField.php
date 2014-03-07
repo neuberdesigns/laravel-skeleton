@@ -4,7 +4,7 @@ class BsFormField {
 		$htmlField = '';
 		$type = strtolower($fieldType);
 		$fieldAttributes = array('class'=>'form-control');
-		$labelAttributes = array('class'=>'col-lg-2 control-label');
+		$labelAttributes = array('class'=>'col-xs-2 col-md-2 control-label');
 		
 		if( !is_array($fieldParams) )
 			$fieldParams = array();
@@ -43,7 +43,7 @@ class BsFormField {
 		$html = '';
 		$html .= '<div class="form-group">';
 		$html .= 	Form::label($fieldName, $label, $finalLabelParams );
-		$html .= '	<div class="col-lg-'.$size.'">';
+		$html .= '	<div class="col-xs-'.$size.' col-md-'.$size.'">';
 		$html .= 		$htmlField;
 		$html .= '	</div>';
 		$html .= '</div>';

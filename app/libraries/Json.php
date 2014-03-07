@@ -60,7 +60,8 @@ class Json {
 	}
 	
 	public function make(){
-		return Request::json($this->getProperties(), $this->status);
+		return Response::make($this->getJson(), $this->status);
+		//return Response::json($this->getProperties(), $this->status);
 	}
 	
 	/**

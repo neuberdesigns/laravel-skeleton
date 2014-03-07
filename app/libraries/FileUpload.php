@@ -1,9 +1,13 @@
 <?php
 
 class FileUpload {
-	public static function make($fieldname, $type='upload'){
+	public static function make($fieldname, $type='upload', $index=null){
 		if( Input::hasFile($fieldname) ){
 			$file = Input::file($fieldname);
+			
+			if( !is_null($index) && is_numeric($index) )
+				$file = $file[$index];
+			
 			$ext = $file->getClientOriginalExtension();
 			
 			$base = public_path().'/';
@@ -17,6 +21,26 @@ class FileUpload {
 		}else{
 			return false;
 		}
+	}
+	
+	public static function fromUrl($url, $type='upload'){
+		$base = public_path().'/';
+		$dest = $type=='upload' ? $base.UPLOAD_DIR :  $base.UPLOAD_TEMP_DIR;
+		$newName = uniqid();
+		
+		$fileinfo = getimagesize($url);
+		if( $fileinfo !== false ){
+			if( $fileinfo[2]==IMG_GIF || $fileinfo[2]==IMG_JPG || $fileinfo[2]==IMG_PNG ){
+				$ext = image_type_to_extension($fileinfo[2], true);
+				$newName .= $ext;
+				
+				if( copy($url, $dest.$newName) ){					
+					return $newName;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
 	public static function batch($files, $type='upload'){
@@ -55,7 +79,7 @@ class FileUpload {
 			return URL::asset( UPLOAD_DIR.MISSING_IMG );
 	}
 	
-	public static function getTim( $filename, $width=null, $height=null, $attribs=array(), $zc=2 ){
+	public static function getTim( $filename, $width=null, $height=null, $attribs=array(), $zc=2, $url=false ){
 		$tim = new Timthumb();
 		$tim->setZc($zc);
 		$tim->setWidth($width);
@@ -63,8 +87,12 @@ class FileUpload {
 		$tim->setBase(URL::to('').'/');
 		
 		$alt = isset($attribs['alt']) ? $attribs['alt'] : null;
+		$thumb = $tim->thumb(self::get($filename), null, null, false);
 		
-		return HTML::image( $tim->thumb(self::get($filename), null, null, false), $alt, $attribs );
+		if( $url )
+			return $thumb;
+		else
+			return HTML::image( $thumb, $alt, $attribs );
 	}
 	
 	public static function delete($filename){

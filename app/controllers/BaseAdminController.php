@@ -3,7 +3,7 @@
 class BaseAdminController extends Controller {
 	protected $model;
 	protected $modelRow;
-	protected $controllerName;
+	protected $controllerSegment;
 	protected $uploads 			= array();
 	protected $except 			= array();
 	protected $aditionalData 	= array();
@@ -13,13 +13,13 @@ class BaseAdminController extends Controller {
 	protected $base 			= 'admin';
 	protected $view 			= 'add';
 	protected $list 			= 'list';
-	protected $slugSource		= 'title';
 	protected $hasSlug 			= false;
+	protected $slugSource		= null;
 	
-	public function missingMethod($parameters){
+	/*public function missingMethod($parameters){
 		var_dump($parameters);
-		exit;
-	}
+		exit('404');
+	}*/
 	
 	/**
 	 * Setup the layout used by the controller.
@@ -34,9 +34,9 @@ class BaseAdminController extends Controller {
 			$this->layout = View::make($this->layout);
 		}
 		
-		if( empty($controllerName) ){
+		if( empty($this->controllerSegment) ){
 			$segs = explode('/', BasePath::getPath());
-			$this->controllerName = end($segs);
+			$this->controllerSegment = end($segs);
 		}
 	}
 	
@@ -52,7 +52,7 @@ class BaseAdminController extends Controller {
 		$formModel = $id>0 ? $this->model->find($id) : $this->model;
 		
 		$data['model'] = $formModel;
-		$data['controllerName'] = $this->controllerName;
+		$data['controllerSegment'] = $this->controllerSegment;
 		
 		$data = array_merge($data, $this->aditionalData);
 		
@@ -62,7 +62,7 @@ class BaseAdminController extends Controller {
 	
 	public function postAdicionar($id=0){
 		$id = (int)$id;		
-		
+					
 		//Validation rules
 		$rules = $this->rules;
 		
@@ -86,11 +86,13 @@ class BaseAdminController extends Controller {
 			$this->makeUploads($files);
 			
 			if( $this->hasSlug ){
-				$this->modelRow->slug = Input::get($this->slugSource);
+				$this->modelRow->slug = Slug::slugfy( Input::get($this->slugSource) );
 			}
-			//var_dump($this->modelRow->toArray());exit;
+			
+			$this->beforeSave($this->modelRow);
 			if( $this->modelRow->save() ){
-			}			
+			}
+			$this->afterSave($this->modelRow);			
 			
 			return $this->successRedirect();
 		}else{
@@ -112,7 +114,7 @@ class BaseAdminController extends Controller {
 		
 		$data['pagination'] = $pagination->links();
 		$data['list'] = $pagination->getItems();
-		$data['controllerName'] = $this->controllerName;
+		$data['controllerSegment'] = $this->controllerSegment;
 		$data = array_merge($data, $this->aditionalData);
 		
 		$viewPath = $this->base.'.'.$this->getControllerName().'.'.$this->list;
@@ -136,7 +138,10 @@ class BaseAdminController extends Controller {
 	
 	
 	protected function getControllerName(){
-		return strtolower( str_replace('Controller', '', get_class($this) ) );
+		$classname = get_class($this);
+		$controllerName = str_replace(array('_controller', '_'), array('', '-'), snake_case($classname) );
+		
+		return $controllerName;
 	}
 	
 	protected function deleteOldUploads($files){
@@ -173,6 +178,142 @@ class BaseAdminController extends Controller {
 		return Redirect::to( $path );
 	}
 	
+	//GALLERY
+	//postAjaxSendFiles()
+	public function doAjaxSendFiles($fk, $mdGallery, $mdGalleryImage){
+		ini_set('html_errors', 'off');
+		
+		$fieldname = 'gallery_files';
+		$json = new Json();
+		$files = array();
+		$allowedVideos = array();
+		$allowedImages = array('jpeg', 'jpg', 'png', 'gif');
+		$allowed = array_merge($allowedImages, $allowedVideos);
+		$type = null;
+		
+		if( Request::ajax() ){
+			$filesUpload = Input::file($fieldname);
+			$files = array();
+			
+			$id = (int)Input::get('id');			
+			$gallery = $mdGallery->find($id);
+			
+			if( !empty($filesUpload) ){
+				if( !empty($gallery) ){
+					
+					foreach ($filesUpload as $key => $file) {
+						
+						$ext = strtolower( $file->getClientOriginalExtension() );
+						
+						if( in_array($ext, $allowedImages) ){
+							$type = 'image';
+						}
+						
+						if( !empty($type) ){
+							$upload = FileUpload::make($fieldname, 'temp', $key);
+							if( $upload!==false ){
+								$photo = $mdGalleryImage->newInstance();
+								$photo->image = $upload;
+								$photo->order = 99999;
+								$photo->$fk = $gallery->id;
+								
+								if( $photo->save() ){
+									FileUpload::move($upload);
+									$files[$key] = array(
+										'name' => $upload,
+										'url' => FileUpload::get( $upload ),
+										'thumbnailUrl' => FileUpload::getTim( $upload, null, null, null, false ),
+										'type' => $type,
+										'item' => View::make('admin.partial.gallery-list-item', array('file'=>$photo) )->render(),
+									);
+									$json->setSuccess('Imagem enviada');
+								}else{
+									$json->setFail('Ocorreu um erro ao salvar a imagem');
+								}
+							}else{
+								$json->setFail('Ocorreu um erro ao enviar a foto');
+								$files[$key]['error'] = $json->response;
+							}
+						}else{
+							$json->setFail('Arquivo invalido, é permitido somente: '. implode(', ', $allowed) );
+							$files[$key]['error'] = $json->response;
+						}
+					}// endforeach
+				}else{
+					$json->setFail('O album parece não existir');
+					$files[]['error'] = $json->response;
+				}
+			}else{
+				$json->setFail('O arquivo parece ser muito grande');
+				$files[]['error'] = $json->response;
+			}
+			
+		}
+		
+		$json->add('files', $files);
+		
+		return $json->make();
+	}
+	
+	//postAjaxRemoveFile()
+	public function doAjaxRemoveFile($mdGalleryImage){
+		ini_set('html_errors', 'off');
+		$json = new Json();
+		
+		if( Request::ajax() ){
+			$id = (int)Input::get('id');
+			$delete = $this->deleteFileGallery($id, $mdGalleryImage);
+			
+			if( $delete ){
+				$json->setSuccess('Imagem removida com sucesso');
+			}else{
+				$json->setFail('Erro ao remover a imagem');
+			}
+		}
+		
+		return $json->make();
+	}
+	
+	//postAjaxOrganize()
+	public function doAjaxUpdateOrder($fk, $mdGallery, $mdGalleryImage){
+		ini_set('html_errors', 'off');
+		$json = new Json();
+		
+		if( Request::ajax() ){
+			$galleryId = (int)Input::get('gallery_id');
+			$order = Input::get('order');
+			$gallery = $mdGallery->find($galleryId);
+			
+			if( !empty($gallery) ){
+				foreach( $order as $k=>$photo ){
+					$mdGalleryImage->where($fk, '=', $gallery->id)
+						->where('id', '=', $photo['id'])
+						->update( array('order'=>$photo['index']) );
+				}
+				$json->setSuccess('Ordem atulizada');
+			}else{
+				$json->setFail('O album não existe');
+			}
+		}
+		
+		return $json->make();
+	}
+	
+	protected function deleteFileGallery($id, $mdGalleryImage){
+		$file = $mdGalleryImage->find($id);
+		
+		if( !empty($file) ){
+			FileUpload::delete($file->image);
+			$delRow = $file->delete();
+			
+			if( $delRow ){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	protected function buildSelectList($collection, $prop, $key='id'){
 		$list = array();
 		
@@ -186,4 +327,8 @@ class BaseAdminController extends Controller {
 	protected function beforeValidator($id=null, &$validator=null){}
 	
 	protected function afterValidator($id=null, &$validator=null){}
+	
+	protected function beforeSave($model){}
+	
+	protected function afterSave($model){}
 }

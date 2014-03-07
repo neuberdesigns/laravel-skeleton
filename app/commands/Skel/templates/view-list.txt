@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('main-content')
-	<a href="{{URL::to('/admin/'.$controllerName.'/adicionar')}}" class="btn btn-primary btn-lg">Adicionar</a>
+	<a href="{{URL::to('/admin/'.$controllerSegment.'/adicionar')}}" class="btn btn-primary btn-lg">Adicionar</a>
 	
 	<table class="table table-striped table-bordered table-hover">
 		<thead>
