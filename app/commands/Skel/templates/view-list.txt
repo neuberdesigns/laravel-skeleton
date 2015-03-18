@@ -6,7 +6,6 @@
 	<table class="table table-striped table-bordered table-hover">
 		<thead>
 			<tr>
-				<th>{{OrderLink::make('#', 'id')}}</th>
 				{fieldsList}
 				<th>Ação</th>
 			</tr>
@@ -14,7 +13,6 @@
 		<tbody>
 			@foreach( $list as $k=>$row )
 			<tr>
-				<td>{{$row->getKey()}}</td>
 				{fieldsName}
 				<td>
 					@include('admin/partial/list-actions')

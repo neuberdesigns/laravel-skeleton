@@ -1,5 +1,6 @@
 @if( Session::has('mailsend') )
-	<div class="alert alert-info alert-dismissable">
+	<div data-alert class="alert alert-info alert-dismissable alert-box info">
+		
 		{{Session::get('mailsend')}}
 	</div>
 @endif

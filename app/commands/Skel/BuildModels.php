@@ -40,6 +40,11 @@ class BuildModels extends Command {
 		$dbName = DB::getDatabaseName();
 		$tables = DB::select('SHOW TABLES');
 		$targetTable = $this->option('table');
+		$hasRelation = false;
+		$relationTable = null;
+		$relationType = null;
+		$relationName = null;
+		$relationsStr = '';
 		
 		foreach( $tables as $table ){
 			$primary = 'id';
@@ -53,8 +58,7 @@ class BuildModels extends Command {
 				continue;
 			
 			$modelName = ucwords( str_replace('_', ' ', $tableName) );
-			$modelName = str_replace(' ', '', $modelName);
-		
+			$modelName = str_replace(' ', '', $modelName);		
 			
 			$columns = DB::select('SHOW COLUMNS FROM `'.$tableName.'`');
 			foreach( $columns as $column ){
@@ -71,7 +75,7 @@ class BuildModels extends Command {
 			
 			$createFile = false;
 			$template = file_get_contents(__DIR__.'/templates/model.txt');
-			$template = str_replace(array('{model}', '{table}', '{primary}', '{timestamps}'), array($modelName, $tableName, $primary, $timestamps), $template);
+			$template = str_replace(array('{model}', '{table}', '{primary}', '{timestamps}', '{relations}'), array($modelName, $tableName, $primary, $timestamps, $relationsStr), $template);
 			
 			$modelPath = app_path().'/models/'.$modelName.'.php';
 			if( file_exists($modelPath) ){
@@ -85,6 +89,7 @@ class BuildModels extends Command {
 			if( $createFile ){
 				file_put_contents($modelPath, $template);
 				$this->info('created model "'.$modelName.'" with table "'.$tableName.'"');
+				$relationsStr = '';
 			}			
 		}
 	}
@@ -112,5 +117,5 @@ class BuildModels extends Command {
 			array('table', 't', InputOption::VALUE_OPTIONAL, 'Create the model for epecified Table', null),
 		);
 	}
-
+	
 }

@@ -5,7 +5,11 @@ ul {
 	margin: 0;
 }
 
-.margin-top { margin-top: 10px }
+
+.margin-top { margin-top: 15px }
+.margin-bottom { margin-bottom: 15px }
+.margin-left { margin-left: 15px }
+.margin-right { margin-right: 15px }
 
 .footer { text-align: center }
 
@@ -36,10 +40,34 @@ ul {
 	margin: auto;
 }
 
-.status-icon-active {
+.status-icon-active, .status-icon-1 {
 	background: #0C0;
 }
 
-.status-icon-inactive {
+.status-icon-inactive, .status-icon-0 {
 	background: #C00;
+}
+
+.images-list li {
+	margin: 10px 0;
+}
+
+.images-list li .gallery-inner {
+	border: 1px solid #CCC;
+	padding: 10px;
+}
+
+
+.preview-image {
+}
+
+.preview-image .preview-image-inner {
+	position: relative;
+	overflow: hidden;
+}
+
+.preview-image .preview-image-inner .image-control {
+	position: absolute;
+	top: -20px;
+	right: 25px;
 }

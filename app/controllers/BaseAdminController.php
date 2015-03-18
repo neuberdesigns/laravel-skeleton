@@ -14,6 +14,7 @@ class BaseAdminController extends Controller {
 	protected $view 			= 'add';
 	protected $list 			= 'list';
 	protected $hasSlug 			= false;
+	protected $manualSlug 		= false;
 	protected $slugSource		= null;
 	
 	/*public function missingMethod($parameters){
@@ -61,13 +62,10 @@ class BaseAdminController extends Controller {
 	}
 	
 	public function postAdicionar($id=0){
-		$id = (int)$id;		
-					
-		//Validation rules
-		$rules = $this->rules;
+		$id = (int)$id;
 		
 		$this->beforeValidator($id, $validator);
-		$validator = Validator::make(Input::all(), $rules);
+		$validator = Validator::make(Input::all(), $this->rules);
 		$validator->passes();
 		$this->afterValidator($id, $validator);
 		
@@ -85,12 +83,15 @@ class BaseAdminController extends Controller {
 			$this->modelRow->fill( Input::except($this->except) );
 			$this->makeUploads($files);
 			
-			if( $this->hasSlug ){
+			if( $this->hasSlug && !$this->manualSlug ){
 				$this->modelRow->slug = Slug::slugfy( Input::get($this->slugSource) );
 			}
 			
 			$this->beforeSave($this->modelRow);
 			if( $this->modelRow->save() ){
+				Session::flash('save_success', 'Salvo com sucesso');
+			}else{
+				Session::flash('save_fail', 'Ops! Ocorreu um erro ao salvar');
 			}
 			$this->afterSave($this->modelRow);			
 			
@@ -133,8 +134,39 @@ class BaseAdminController extends Controller {
 		}
 		
 		return Redirect::to($uri);
-	}	
+	}
 	
+	public function getOrganizar($field='order', $direction='asc'){
+		$data = array();
+		$controllerName = $this->getControllerName();
+		$viewPath = $this->base.'.organize';
+		
+		$data['list'] = $this->model->orderBy($field, $direction)->get();
+		$data['controllerName'] = $controllerName;
+		return View::make($viewPath, $data);
+	}
+	
+	public function postAjaxOrganize(){
+		ini_set('html_errors', 'off');
+		$json = new Json();
+		
+		if( Request::ajax() ){
+			$list = Input::get('list');
+			//print_r($list);
+			foreach($list as $k=>$item ){
+				$model = $this->model->newInstance();
+				$row = $model->find($item);
+				
+				if( !empty($row) ){
+					$row->order = $k;
+					$row->save();
+				}
+			}
+		}
+		
+		$json->setSuccess('Reorganizado');
+		return $json;
+	}
 	
 	
 	protected function getControllerName(){
@@ -176,6 +208,120 @@ class BaseAdminController extends Controller {
 		$path = implode('/', $segments);
 		
 		return Redirect::to( $path );
+	}
+	
+	protected function export($map, $downloadName=null, $delimiter=';'){
+		$tempDir = public_path().'/'.UPLOAD_TEMP_DIR;
+		$fileName = 'export.csv';
+		$path = $tempDir.$fileName;
+		$fp = fopen($path, 'w');
+		
+		if( empty($downloadName) )
+			$downloadName = date('Y-m-d').'_newsletter';
+		
+		
+		$headerLine = array_values($map);
+		
+		fputcsv($fp, $headerLine, $delimiter);
+		foreach( $this->model->all() as $k=>$row ){
+			$line = array();
+			foreach( $map as $field=>$name){
+				array_push($line, $row->$field);
+			}
+			
+			fputcsv($fp, $line, $delimiter);
+		}
+		
+		return Response::download($path, $downloadName.'.csv');
+	}
+	
+	public function postAjaxSeoLoad(){
+		ini_set('html_errors', false);
+		
+		$seo 	= new Seo();
+		$id 	= (int)Input::get('id');
+		$json 	= new Json();
+		
+		if( Request::ajax() && $id > 0 ){
+			$type = $this->model->getTable();
+			$item = $seo->where('object_id', '=', $id)->where('type', '=', $type)->first();
+			
+			$dataSeo = array(
+				'object_id'=>$id,
+				'type'=>$type,
+				'title'=>'',
+				'keywords'=>'',
+				'description'=>'',
+			);
+			
+			//var_dump($item->toArray());
+			if( empty($item) ){
+				$item = $seo->create($dataSeo);
+			}
+			
+			$json->add( 'data', $item->toArray() );
+			$json->setSuccess('Carregado');
+		}else{
+			$json->setFail('Requisição invalida ou o item não existe');
+		}
+		
+		echo $json;
+		exit;
+	}
+	
+	public function postAjaxSeoSave(){
+		ini_set('html_errors', false);
+		
+		$json 	= new Json();
+		$seo 	= new Seo();
+		$id 	= (int)Input::get('object_id');
+		
+		if( Request::ajax() && $id > 0 ){
+			$type = $this->model->getTable();
+			$item = $seo->where('object_id', '=', $id)->where('type', '=', $type)->first();
+			
+			$dataSeo = array(
+				'title'=>Input::get('title'),
+				'keywords'=>Input::get('keywords'),
+				'description'=>Input::get('description'),
+			);
+			
+			if( !empty($item) ){
+				$item->fill( $dataSeo );
+				$item->save();
+				$json->setSuccess('Salvo com sucesso');
+			}else{
+				$json->setFail('Erro ao salvar');
+			}
+			
+		}else{
+			$json->setFail('Requisição invalida ou o item não existe');
+		}
+		
+		echo $json;
+		exit;
+	}
+	
+	public function postDeleteImage(){
+		ini_set('html_errors', 'off');
+		$json = new Json();
+		
+		$id = (int)Input::get('id');
+		$field = (string)Input::get('field');
+		
+		$row = $this->model->find($id);
+		
+		if( !empty($row) && (isset($row->$field) && !is_null($row->$field) ) ){
+			FileUpload::delete($row->$field);
+			$row->$field = null;
+			$row->save();
+			$json->setSuccess('Imagem removida');
+		}else{
+			$json->setFail('A imagem não foi removida');
+		}
+		
+		echo $json;
+		exit;
 	}
 	
 	//GALLERY
@@ -322,6 +468,53 @@ class BaseAdminController extends Controller {
 		}
 		
 		return $list;
+	}
+	
+	protected function doJqUploader(){
+		$files 		= Input::file('files');
+		$filesList	= array();
+		$extensions = array('jpg', 'jpeg', 'png', 'gif');
+		$ext;
+		$error 		= null;
+		$win 		= ';)';
+		$oldName 	= '';
+		
+		foreach( $files as $i=>$file ){
+			$error = null;
+			$newName = null;
+			$status = (object)array('uploaded'=>false, 'response'=>'', 'name'=>'', 'type'=>'', 'size'=>'', 'error'=>false);
+			
+			$ext = strtolower( $file->getClientOriginalExtension() );
+			$mime = $file->getMimeType();
+			
+			if( in_array($ext, $extensions) ){
+				$newName = FileUpload::make('files', 'tmp', $i);
+				if( $newName!==false ){
+					//FileUpload::move($newName);
+					//FileUpload::delete($oldName);
+					$win = 'Arquivo enviado';
+				}else{
+					$error = 'O arquivo não pode ser enviado';
+				}
+			}else{
+				$error = 'Somente imagens do tipo '.implode(', ', $extensions).' são permitidos';
+			}
+			
+			if( empty($error) ){
+				$status->uploaded 		= true;
+				$status->response 		= $win;
+				$status->name 			= $newName;
+				$status->originalName	= $file->getClientOriginalName();
+			}else{
+				$status->response 	= $error;
+				$status->error = true;
+			}
+			$status->type = $mime;
+			$status->size = $file->getSize();
+			$filesList[] = $status;
+		}
+		
+		return $filesList;
 	}
 	
 	protected function beforeValidator($id=null, &$validator=null){}

@@ -27,6 +27,7 @@ $app = new Illuminate\Foundation\Application;
 $env = $app->detectEnvironment(array(
 
 	'local' => array('NEUBER-NOTE'),
+	'nibler' => array('hm8273'),
 
 ));
 

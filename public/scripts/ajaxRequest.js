@@ -175,6 +175,7 @@ var ajaxRequest = {
 	},
 	
 	removeEfect: function(element, useColor, color){
+		console.log( element, 'removeEfect');
 		if( typeof(useColor)=='undefined' )
 			useColor = false;
 		

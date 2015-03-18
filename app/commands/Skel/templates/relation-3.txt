@@ -1,0 +1,4 @@
+	
+	public function {relation_name}(){
+		return $this->belongsToMany('{relation_table}');
+	}

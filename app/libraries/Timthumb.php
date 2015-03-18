@@ -29,8 +29,8 @@ class Timthumb {
 
 	private $canvasColor = '#FFFFFF';
 	private $zc = 1;
-	private $width = null;
-	private $height = null;
+	private $width = 100;
+	private $height = 100;
 	private $quality = 80;
 	private $transparency = true;
 	private $sharpen = false;
@@ -206,11 +206,9 @@ class Timthumb {
 	}
 
 	/*PUBLIC*/
-	public function preConfigure($width, $height, $zc){
+	public function preConfigure($width, $height, $zc){}
 
-	}
-
-	public function thumb($src, $width=null, $height=null, $echo=true){		
+	public function thumb($src, $width=0, $height=0, $echo=false){
 		$thumbUrl = $this->getBase().$this->getTim().$this->buildParams($src, $width, $height);
 		$this->fullUrl = $thumbUrl;
 		
@@ -219,5 +217,12 @@ class Timthumb {
 			echo $thumbUrl;
 		else
 			return $thumbUrl;
+	}
+	
+	public static function get($src, $width=0, $height=0, $zc=1){
+		$tim = new Timthumb();
+		$tim->setZc($zc);
+		
+		return $tim->thumb($src, $width, $height);
 	}
 }

@@ -79,7 +79,7 @@ class FileUpload {
 			return URL::asset( UPLOAD_DIR.MISSING_IMG );
 	}
 	
-	public static function getTim( $filename, $width=null, $height=null, $attribs=array(), $zc=2, $url=false ){
+	public static function getTim( $filename, $width=null, $height=null, $zc=2, $attribs=array(), $url=true ){
 		$tim = new Timthumb();
 		$tim->setZc($zc);
 		$tim->setWidth($width);

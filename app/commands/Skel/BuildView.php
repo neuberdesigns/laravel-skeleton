@@ -157,7 +157,7 @@ class BuildView extends Command {
 					
 					if( str_contains($field['name'], 'image') ){
 						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', 10, 'file' )}}".PHP_EOL;
-						$fieldsFormStr .= "\t\t{{FileUpload::getTim(\$model->".$field['name'].", 150, 150)}}".PHP_EOL;
+						$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
 						
 					}elseif( str_contains($field['name'], 'status') ){
 						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', 2, 'select', null, null, array( 'list'=>array(

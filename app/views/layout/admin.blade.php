@@ -15,6 +15,7 @@
 	@yield('head')
 </head>
 <body>
+	@section('navigation')
 	<div id="header" class="container">
 		<header class="row">
 			<nav class="navbar navbar-default" role="navigation">
@@ -30,55 +31,60 @@
 				
 				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 					<ul class="nav navbar-nav">
-						@section('navigation')
-							<li class="dropdown {{Request::is('admin/home*') ? 'active' : ''}}">
-								<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-									Home
-									<b class="caret"></b>
-								</a>
-								<ul class="dropdown-menu">
-									<li>
-										{{HTML::link('/','Ver Site', array('target'=>'_blank') )}}
-									</li>
-									
-									<li>
-										{{HTML::link('admin','Inicio')}}
-									</li>
-								</ul>
-							</li>
-							
-							<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
-								{{HTML::link('admin/controller/listagem','Title')}}
-							</li>
-							
-							<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
-								<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-									Section
-									<b class="caret"></b>
-								</a>
-								<ul class="dropdown-menu">
-									<li>
-										{{HTML::link('admin/controller/listagem','Title')}}
-									</li>
-								</ul>
-							</li>
-							
-							<li class="">
-								{{HTML::link('admin/logout', 'Sair')}}
-							</li>
-						@show
+						
+						<li class="dropdown {{Request::is('admin/home*') ? 'active' : ''}}">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+								Home
+								<b class="caret"></b>
+							</a>
+							<ul class="dropdown-menu">
+								<li>
+									{{HTML::link('/','Ver Site', array('target'=>'_blank') )}}
+								</li>
+								
+								<li>
+									{{HTML::link('admin','Inicio')}}
+								</li>
+							</ul>
+						</li>
+						
+						<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
+							{{HTML::link('admin/controller/listagem','Title')}}
+						</li>
+						
+						<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+								Section
+								<b class="caret"></b>
+							</a>
+							<ul class="dropdown-menu">
+								<li>
+									{{HTML::link('admin/controller/listagem','Title')}}
+								</li>
+							</ul>
+						</li>
+						
+						<li class="dropdown {{Request::is('admin/admin*') ? 'active' : ''}}">
+							{{HTML::link('admin/admin/listagem','Admin')}}
+						</li>
+						
+						<li class="">
+							{{HTML::link('admin/logout', 'Sair')}}
+						</li>
 					</ul>
 				</div>
 			</nav>
 		</header>	
 	</div><!-- END #header -->
+	@show
 	
 	<div id="main-content" class="container">
+		<div class="page-header"/>
 		
-		@include('global.errors')		
-		<div class="main-content-inner col-lg-12">
-			@yield('main-content')
-		</div><!-- END #main-content-inner -->
+		@include('global.errors')
+		@include('global.flash-save')
+		
+		@yield('main-content')
 	</div><!-- END #main-content -->
 	
 	<div id="footer" class="container">
@@ -101,8 +107,7 @@
 	{{HTML::script('scripts/tinyMceConfig.js')}}
 	
 	{{HTML::script('scripts/ajaxRequest.js')}}
-	{{HTML::script('scripts/default.js')}}
-	{{HTML::script('scripts/multi-image.js')}}
+	{{HTML::script('scripts/default-admin.js')}}
 	@yield('scripts')
 	{{HTML::script('scripts/interface-adm.js')}}
 	

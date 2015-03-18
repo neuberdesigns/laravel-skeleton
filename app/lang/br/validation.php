@@ -63,6 +63,9 @@ return array(
 	),
 	"unique"           => "Este :attribute já existe.",
 	"url"              => "O :attribute não é uma URL válida.",
+	"phone" 		=> "O formato do campo :attribute é inválido. Use xxxxx-xxxx",
+	"phone_area"	=> "O formato do campo :attribute é inválido. Use (xx) xxxxx-xxxx",
+	"hex" 	=> "O campo :attribute deve ser uma cor no formato #xxxxxx",
 
 	/*
 	|--------------------------------------------------------------------------

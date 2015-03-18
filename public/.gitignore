@@ -1,0 +1,11 @@
+#*[a-f0-9]+\.jpg|jpeg|png|gif
+/uploads/*
+!/uploads/0-no-image.jpg
+!/uploads/tynemce_uploads
+/uploads/tynemce_uploads/*
+
+!/uploads/temp
+/uploads/temp/*
+
+!/cache
+/cache/*

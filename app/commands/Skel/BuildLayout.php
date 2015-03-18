@@ -45,7 +45,8 @@ class BuildLayout extends Command {
 		
 		if( file_exists($layoutPath) ){
 			if( $this->confirm('Layout site.blade.php exists, replace it? [y|n] n ', false) ){
-				foreach( $files as $file ){
+				
+				foreach( $files as $i=>$file ){
 					if( file_exists($file) ){
 						$layoutPart = file_get_contents($file);
 						$html->load($layoutPart, true, false);
@@ -83,7 +84,12 @@ class BuildLayout extends Command {
 						}
 						
 						$layoutPart = str_replace($replaceSrc, $replaceTgt, $layoutPart);
-						$layout .= "\n\n<!-- JOINED HERE -->\n\n".$layoutPart;
+						
+						if( $i >0 ){
+							$layout .= "\n\n<!-- JOINED HERE -->\n\n";
+						}
+						
+						$layout .= $layoutPart;
 					}else{
 						$this->error('The file "'.$file.'" not exists');
 					}

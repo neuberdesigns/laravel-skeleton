@@ -14,6 +14,7 @@
 //Admin
 Route::group(array('before'=>'adm.auth', 'prefix'=>'admin'), function(){
 	Route::controller('index', 'AdminController');
+	Route::controller('admin', 'AdminController');
 });
 Route::controller('/admin', 'AdminController');
 

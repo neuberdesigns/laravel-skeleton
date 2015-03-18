@@ -3,4 +3,5 @@ class {model} extends Eloquent {
 	public $timestamps = {timestamps};
 	protected $table = '{table}';
 	protected $guarded = array('{primary}');
+	{relations}
 } 

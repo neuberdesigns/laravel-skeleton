@@ -2,6 +2,8 @@
 
 @section('main-content')
 	<a href="{{URL::to('/admin/'.$controllerSegment.'/listagem')}}" class="btn btn-primary btn-lg">Voltar a Listagem</a>
+	<a href="{{URL::to('/admin/'.$controllerSegment.'/adicionar')}}" class="btn btn-primary btn-lg">Novo</a>
+	
 	<h3>{{ucwords( str_replace('-', ' ', $controllerSegment) )}}</h3>
 	
 	{{Form::model($model, array('class'=>'form-horizontal', 'files'=>true) )}}

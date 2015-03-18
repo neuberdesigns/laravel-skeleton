@@ -64,6 +64,11 @@ class Json {
 		//return Response::json($this->getProperties(), $this->status);
 	}
 	
+	public function makeJson(){
+		//return Response::make($this->getJson(), $this->status);
+		return Response::json( $this->getProperties() );
+	}
+	
 	/**
 	 * Import a json string,, all previous properties will be lost
 	 * @param  string $json A json string
