@@ -99,7 +99,7 @@
 		</footer>
 	</div><!-- END #footer -->
 	
-	{{HTML::script('scripts/jquery-2.0.3.min.js')}}
+	{{HTML::script('scripts/jquery-2.1.4.min.js')}}
 	{{HTML::script('scripts/tinymce/tinymce.min.js')}}
 	
 	{{HTML::script('scripts/bootstrap.min.js')}}
@@ -110,6 +110,7 @@
 	{{HTML::script('scripts/default-admin.js')}}
 	@yield('scripts')
 	{{HTML::script('scripts/interface-adm.js')}}
+	{{HTML::script('scripts/interface-custom-adm.js')}}
 	
 	@yield('footer')
 </body>

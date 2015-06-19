@@ -1,4 +1,6 @@
 <?php
 class SiteController extends BaseController {
-	public function getIndex(){}
+	public function getIndex(){
+		return View::make('site.index');
+	}
 } 
