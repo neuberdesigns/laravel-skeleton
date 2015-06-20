@@ -120,6 +120,7 @@ class BuildView extends Command {
 				}
 								
 				$fieldsList[$k]['name'] = $column->Field;
+				$fieldsList[$k]['display_name'] = str_replace('_', ' ', $column->Field);
 				$fieldsList[$k]['type'] = $inputType;
 				$fieldsList[$k]['size'] = $size;
 				$fieldsList[$k]['values'] = $inputList;
@@ -152,22 +153,22 @@ class BuildView extends Command {
 						$fieldsFormStr .= "\t\t";
 					}
 					
-					$fieldsListStr .= "<th>{{OrderLink::make('".ucfirst($field['name'])."', '$field[name]')}}</th>".PHP_EOL;
+					$fieldsListStr .= "<th>{{OrderLink::make('".ucfirst($field['display_name'])."', '$field[name]')}}</th>".PHP_EOL;
 					$fieldsNameStr .= '<td>{{$row->'.$field['name'].'}}</td>'.PHP_EOL;
 					
 					if( str_contains($field['name'], 'image') ){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', 10, 'file' )}}".PHP_EOL;
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['display_name'])."', 10, 'file' )}}".PHP_EOL;
 						$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
 						
 					}elseif( str_contains($field['name'], 'status') ){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', 2, 'select', null, null, array( 'list'=>array(
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['display_name'])."', 2, 'select', null, null, array( 'list'=>array(
 									'1'=>'Ativo',
 									'0'=>'Inativo',
 								)
 						) ) }}".PHP_EOL;
 					}else{
 						//make($fieldName, $label, $size=2, $fieldType='text', $fieldParams=array(), $labelParams=array(), $aditionalParams=array()){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['name'])."', $field[size], '$field[type]'";
+						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['display_name'])."', $field[size], '$field[type]'";
 						
 						
 						if( !empty($field['values']) ){
@@ -183,8 +184,6 @@ class BuildView extends Command {
 							$fieldsFormStr .= ')}}'.PHP_EOL;
 						}
 					}
-					
-					
 				}
 							
 				$templateList = str_replace( array('{fieldsList}', '{fieldsName}'), array($fieldsListStr, $fieldsNameStr), $templateList);
