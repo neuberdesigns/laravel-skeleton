@@ -3,6 +3,13 @@ $('document').ready(function(){
 		img_url: baseUrl+'images/',
 	});
 	
+	var placeholder = {placeholder:'_'};
+	$('.mask-datetime').mask('99/99/9999 99:99', placeholder);
+	$('.mask-date').mask('99/99/9999', placeholder);
+	$('.mask-phone').mask('9999-9999?9', placeholder);
+	$('.mask-phonearea').mask('(99) 9999-9999?9', placeholder);
+	$('.mask-zip-br').mask('99999-999', placeholder);
+	
 	if( $('.sortable').length>0 ){
 		$('.sortable').sortable();
 	}
@@ -81,7 +88,22 @@ $('document').ready(function(){
 		});
 	}
 	
-	//Begin custom implementations
+	if( jQuery.ui ){
+		$( ".datepicker" ).datepicker({
+			gotoCurrent: false,
+			autoSize: true,
+			dateFormat: 'yy-mm-dd',
+			dayNames: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+			dayNamesShort: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+			dayNamesMin: ['Se', 'Te', 'Qu', 'Qu', 'Se', 'Sa', 'Do'],
+			monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+			monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+			nextText: 'Próximo',
+			prevText: 'Anterior',
+			closeText: 'Fechar',
+			currentText: 'Hoje'
+		});
+	}
 	
 });
 

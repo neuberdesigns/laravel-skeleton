@@ -48,20 +48,28 @@
 							</ul>
 						</li>
 						
-						<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
-							{{HTML::link('admin/controller/listagem','Title')}}
+						<li class="dropdown {{Request::is('admin/calendario') ? 'active' : ''}}">
+							{{HTML::link('admin/calendario/listagem','Calendário')}}
 						</li>
 						
-						<li class="dropdown {{Request::is('admin/') ? 'active' : ''}}">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-								Section
-								<b class="caret"></b>
-							</a>
-							<ul class="dropdown-menu">
-								<li>
-									{{HTML::link('admin/controller/listagem','Title')}}
-								</li>
-							</ul>
+						<li class="dropdown {{Request::is('admin/evento') ? 'active' : ''}}">
+							{{HTML::link('admin/evento/listagem','Evento')}}
+						</li>
+						
+						<li class="dropdown {{Request::is('admin/configuracoes') ? 'active' : ''}}">
+							{{HTML::link('admin/configuracoes/','Configurações')}}
+						</li>
+						
+						<li class="dropdown {{Request::is('admin/informacoes-adicionais') ? 'active' : ''}}">
+							{{HTML::link('admin/informacoes-adicionais/listagem','Informacoes Adicionais')}}
+						</li>
+						
+						<li class="dropdown {{Request::is('admin/pagina') ? 'active' : ''}}">
+							{{HTML::link('admin/pagina/listagem','Página')}}
+						</li>
+						
+						<li class="dropdown {{Request::is('admin/slider') ? 'active' : ''}}">
+							{{HTML::link('admin/slider/listagem','Carrossel')}}
 						</li>
 						
 						<li class="dropdown {{Request::is('admin/admin*') ? 'active' : ''}}">
@@ -79,12 +87,12 @@
 	@show
 	
 	<div id="main-content" class="container">
-		<div class="page-header"/>
-		
-		@include('global.errors')
-		@include('global.flash-save')
-		
-		@yield('main-content')
+		<div class="row">
+			@include('global.errors')
+			@include('global.flash-save')
+			
+			@yield('main-content')
+		</div>
 	</div><!-- END #main-content -->
 	
 	<div id="footer" class="container">
