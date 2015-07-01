@@ -13,7 +13,6 @@ class BaseAdminController extends Controller {
 	protected $base 			= 'admin';
 	protected $view 			= 'add';
 	protected $list 			= 'list';
-	protected $hasSlug 			= false;
 	protected $manualSlug 		= false;
 	protected $slugSource		= null;
 	
@@ -83,7 +82,7 @@ class BaseAdminController extends Controller {
 			$this->modelRow->fill( Input::except($this->except) );
 			$this->makeUploads($files);
 			
-			if( $this->hasSlug && !$this->manualSlug ){
+			if( !empty($this->slugSource) && !$this->manualSlug ){
 				$this->modelRow->slug = Slug::slugfy( Input::get($this->slugSource) );
 			}
 			
@@ -488,7 +487,7 @@ class BaseAdminController extends Controller {
 			$mime = $file->getMimeType();
 			
 			if( in_array($ext, $extensions) ){
-				$newName = FileUpload::make('files', 'tmp', $i);
+				$newName = FileUpload::make('files', 'upload', $i);
 				if( $newName!==false ){
 					//FileUpload::move($newName);
 					//FileUpload::delete($oldName);
