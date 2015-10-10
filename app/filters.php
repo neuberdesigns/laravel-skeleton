@@ -17,8 +17,9 @@ App::before(function($request)
 	define('UPLOAD_DIR', 'uploads/');
 	define('UPLOAD_TEMP_DIR', 'uploads/temp/');
 	
-	define('EMAIL_RECEIVER', 'atendimento@neuberdesigns.com.br');
 	define('EMAIL_NAME', 'Neuber Oliveira');
+	define('EMAIL_RECEIVER', 'atendimento@neuberdesigns.com.br');
+	define('EMAIL_SENDER', 'atendimento@neuberdesigns.com.br');
 });
 
 

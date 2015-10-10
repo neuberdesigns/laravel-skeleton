@@ -38,7 +38,7 @@ class ContactForm {
 		}
 	}
 	
-	public function send($subject, $to=EMAIL_RECEIVER, $toName=EMAIL_NAME, $view=null){
+	public function send($subject, $from=null, $fromName=null, $to=EMAIL_RECEIVER, $toName=EMAIL_NAME, $view=null){
 		$data = array();
 		$fields = array();
 		$view = empty($view) ? 'emails.default' : $view;
@@ -49,14 +49,18 @@ class ContactForm {
 		
 		$data['fields'] = $fields;
 		$self = $this;
-		$send = Mail::send($view, $data, function($message) use ($to, $toName, $subject, $self){
-			$from = EMAIL_RECEIVER;
-			$fromName = EMAIL_NAME;
+		$send = Mail::send($view, $data, function($message) use ($to, $toName, $subject, $self, $from, $fromName){
+			if( empty($from) )
+				$from = EMAIL_RECEIVER;
+			
+			if( empty($fromName) )
+				$fromName = EMAIL_NAME;			
 			
 			$message->subject($subject);
-			$message->replyTo($from, $fromName );
-			$message->from($from, $fromName);
 			$message->to($to, $toName);
+			$message->from($from, $fromName);
+			$message->replyTo($from, $fromName );
+			$message->returnPath(EMAIL_SENDER);
 			
 			if( $self->hasFile ){
 				if( !empty($self->fileFields) && is_array($self->fileFields) ){
