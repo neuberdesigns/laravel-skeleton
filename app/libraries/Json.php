@@ -55,6 +55,12 @@ class Json {
 		}
 	}
 	
+	public function addBatch($properties){
+		foreach( $properties as $prop=>$val ){
+			$this->add($prop, $val);
+		}
+	}
+	
 	public function getJson(){
 		return json_encode($this->getProperties());
 	}

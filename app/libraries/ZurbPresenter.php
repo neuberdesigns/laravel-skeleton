@@ -3,12 +3,12 @@ class ZurbPresenter extends Illuminate\Pagination\Presenter {
 
     public function getActivePageWrapper($text)
     {
-        return '<li class="current"><a href="javascript:void(0)">'.$text.'</a></li>';
+        return '<li class="current"><span class="show-for-sr">'.$text.'</span>'.$text.'</li>';
     }
 
     public function getDisabledTextWrapper($text)
     {
-        return '<li class="arrow unavailable"><a href="">'.$text.'</a></li>';
+        return '<li class="disabled">'.$text.'<span class="show-for-sr">'.$text.'</span></li>';
     }
 
     public function getPageLinkWrapper($url, $page, $rel = null)
