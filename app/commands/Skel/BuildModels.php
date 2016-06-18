@@ -79,7 +79,7 @@ class BuildModels extends Command {
 			
 			$modelPath = app_path().'/models/'.$modelName.'.php';
 			if( file_exists($modelPath) ){
-				if( $this->confirm('Model '.$modelName.'.php exists, replace it? [y|n] n ', false) ){
+				if( $this->confirm('Model '.$modelName.'.php exists, replace it? [y|N] ', false) ){
 					$createFile = true;
 				}
 			}else{

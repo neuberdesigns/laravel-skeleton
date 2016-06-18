@@ -44,7 +44,7 @@ class BuildLayout extends Command {
 		$files = $this->option('file');
 		
 		if( file_exists($layoutPath) ){
-			if( $this->confirm('Layout site.blade.php exists, replace it? [y|n] n ', false) ){
+			if( $this->confirm('Layout site.blade.php exists, replace it? [y|N] ', false) ){
 				
 				foreach( $files as $i=>$file ){
 					if( file_exists($file) ){

@@ -111,7 +111,7 @@ class BuildView extends Command {
 					$inputType = 'textarea';
 					$size = 10;
 				
-				}else if( $type=='enum' ){
+				}else if( $type=='enum' || str_contains($column->Field, 'status') ){
 					$inputType = 'select';
 					
 				}else if( str_contains($column->Field, 'image') ){
@@ -128,7 +128,7 @@ class BuildView extends Command {
 			}
 			
 			if( file_exists($viewPath.$dirName) ){
-				if( $this->confirm('Directory "'.$dirName.'" exists, replace its contents? [y|n] n ', false) ){
+				if( $this->confirm('Directory "'.$dirName.'" exists, replace its contents? [y|N] ', false) ){
 					$createFile = true;
 				}
 			}else{
@@ -156,33 +156,26 @@ class BuildView extends Command {
 					$fieldsListStr .= "<th>{{OrderLink::make('".ucfirst($field['display_name'])."', '$field[name]')}}</th>".PHP_EOL;
 					$fieldsNameStr .= '<td>{{$row->'.$field['name'].'}}</td>'.PHP_EOL;
 					
+					$fieldsFormStr .= "{{InputFactory::create('$field[type]')->name('$field[name]', '".ucfirst($field['display_name'])."')";
+					
 					if( str_contains($field['name'], 'image') ){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['display_name'])."', 10, 'file' )}}".PHP_EOL;
-						$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
+						$fieldsFormStr .= "->size(10)";
+						//$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
 						
 					}elseif( str_contains($field['name'], 'status') ){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['display_name'])."', 2, 'select', null, null, array( 'list'=>array(
-									'1'=>'Ativo',
-									'0'=>'Inativo',
-								)
-						) ) }}".PHP_EOL;
-					}else{
-						//make($fieldName, $label, $size=2, $fieldType='text', $fieldParams=array(), $labelParams=array(), $aditionalParams=array()){
-						$fieldsFormStr .= "{{BsFormField::make('$field[name]', '".ucfirst($field['display_name'])."', $field[size], '$field[type]'";
-						
-						
-						if( !empty($field['values']) ){
-							$fieldsFormStr .= ", null, null, array('list'=>array(".PHP_EOL;
-							
+						$fieldsFormStr .= "
+									->addListItem('1', 'Ativo')
+									->addListItem('0', 'Inativo')";
+
+					}else if( !empty($field['values']) ){
 							foreach($field['values'] as $v){
-								$fieldsFormStr .= "\t\t\t\t\t$v=>$v,".PHP_EOL;
+								$fieldsFormStr .= "\t\t\t\t\t->addListItem('$v', '$v')".PHP_EOL;
 							}
-												
-							$fieldsFormStr .= "\t\t\t\t) ".PHP_EOL;
-							$fieldsFormStr .= "\t\t)}}".PHP_EOL;
-						}else{
-							$fieldsFormStr .= ')}}'.PHP_EOL;
 						}
+					}
+					$fieldsFormStr .= '->build()}}'.PHP_EOL;
+					if( str_contains($field['name'], 'image') ){
+						$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
 					}
 				}
 							

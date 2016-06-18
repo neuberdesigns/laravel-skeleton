@@ -51,7 +51,7 @@ class CreateController extends Command {
 		
 		$modelPath = app_path().'/controllers/admin/'.$controllerName.'Controller.php';
 		if( file_exists($modelPath) ){
-			if( $this->confirm('Controller '.$controllerName.'Controller.php exists, replace it? [y|n] n ', false) ){
+			if( $this->confirm('Controller '.$controllerName.'Controller.php exists, replace it? [y|N] ', false) ){
 				$createFile = true;
 			}
 		}else{
