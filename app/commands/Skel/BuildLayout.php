@@ -109,8 +109,8 @@ class BuildLayout extends Command {
 	protected function getArguments()
 	{
 		return array(
-			array('css-dir', InputArgument::OPTIONAL, 'CSS directory name', 'styles'),
-			array('js-dir', InputArgument::OPTIONAL, 'Java Script directory name', 'scripts'),
+			array('css-dir', InputArgument::OPTIONAL, 'CSS directory name', 'css'),
+			array('js-dir', InputArgument::OPTIONAL, 'Java Script directory name', 'js'),
 		);
 	}
 
