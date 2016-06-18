@@ -20,11 +20,8 @@ class BaseAdminController extends BaseController {
 	const ACTION_SEARCH	= 'busca';
 	
 	public function __construct(){
-		if( Session::has(SESSION_USER) ){
-			$this->user = $this->getUserFromSession();
-		}
 		$this->orderLink = new OrderLink();
-		View::share('me', $this->getUser() );
+		View::share('isLoginPage', Request::is('admin/login') );
 	}
 	
 	public function getIndex($id=null){
@@ -270,12 +267,16 @@ class BaseAdminController extends BaseController {
 	
 	public static function urlTo($controller, $action, $id=null){
 		$orderLink = new OrderLink();
-		$root 		= Request::root().'/'.$controller;
+		$root 		= Request::root().'/admin'.(!empty($controller)?'/':'').$controller;
 		$actionSeg 	= !empty($action) ? '/'.$action : '';
 		$idSeg 		= !empty($id) ? '/'.$id : '';
 		$queryString = $orderLink->getQueryString();
 		
 		return $root.$actionSeg.$idSeg.$queryString;
+	}
+	
+	public static function urlToRoot(){
+		return self::urlTo(null, null, null);
 	}
 	
 	public static function urlToNew($controller, $id=null){

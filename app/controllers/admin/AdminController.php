@@ -1,7 +1,7 @@
 <?php
-
 class AdminController extends BaseAdminController {
 	public function __construct(){
+		parent::__construct();
 		$this->model = new Admin();
 		$this->uploads = array();
 		$this->except = array('password');
@@ -11,7 +11,7 @@ class AdminController extends BaseAdminController {
 			'password'=>'required',
 		);
 	}
-	public function getIndex(){
+	public function getIndex($id=null){
 		if( Auth::guest() )
 			return Redirect::to('admin/login');
 		else
@@ -33,7 +33,7 @@ class AdminController extends BaseAdminController {
 		);
 		
 		$env = App::environment();
-		if( $env=='local' ){
+		if( $env=='local' && (empty(Input::get('email')) && empty(Input::get('password'))) ){
 			$master = Admin::first();
 			$passRaw = '123';
 			
