@@ -1,3 +1,3 @@
 <div class="multi-image-field">
-	{{BsFormField::make('image[]', 'Imagem', 8, 'file' )}}
+	{{InputFactory::create('file')->name('image[]', 'Imagem')->size(8)->build()}}
 </div>

@@ -20,14 +20,15 @@ class BuildModels extends Command {
 	 */
 	protected $description = 'Build the models based on the database.';
 
+	protected $database;
 	/**
 	 * Create a new command instance.
 	 *
 	 * @return void
 	 */
-	public function __construct()
-	{
+	public function __construct(){
 		parent::__construct();
+		$this->database = new DatabaseInfo();
 	}
 
 	/**
@@ -35,62 +36,66 @@ class BuildModels extends Command {
 	 *
 	 * @return void
 	 */
-	public function fire()
-	{	
-		$dbName = DB::getDatabaseName();
-		$tables = DB::select('SHOW TABLES');
+	public function fire(){
 		$targetTable = $this->option('table');
+		if( !empty($targetTable) ){
+			$table = $this->database->find($targetTable);
+			if( $table ){
+				$this->buildModel($table);
+			}else{
+				$this->error('table "'.$targetTable.'" was not found');
+			}
+		}else{
+			foreach( $this->database->getTables() as $table){
+				$this->buildModel($table);
+			}
+		}
+	}
+	
+	public function buildModel($table){
 		$hasRelation = false;
 		$relationTable = null;
 		$relationType = null;
 		$relationName = null;
 		$relationsStr = '';
 		
-		foreach( $tables as $table ){
-			$primary = 'id';
-			$timestamps = 'false';
-			$hasTimestamps = 0;
+		$tableName = $table->getName();
+		$primary = 'id';
+		$timestamps = 'false';
+		$hasTimestamps = 0;
+		
+		$modelName = $table->getNameForClass();
+		
+		$columns = $table->getFields();
+		foreach( $columns as $column ){
+			if( $column->isPrimaryKey())
+				$primary = $column->getName();
 			
-			$fullTableName = 'Tables_in_'.$dbName;
-			$tableName = $table->$fullTableName;
+			if( $column->getName()=='created_at' || $column->getName()=='updated_at' )
+				$hasTimestamps ++;
 			
-			if( !empty($targetTable) && $tableName!=$targetTable)
-				continue;
+			if( $hasTimestamps>=2 )
+				$timestamps = 'true';
 			
-			$modelName = ucwords( str_replace('_', ' ', $tableName) );
-			$modelName = str_replace(' ', '', $modelName);		
-			
-			$columns = DB::select('SHOW COLUMNS FROM `'.$tableName.'`');
-			foreach( $columns as $column ){
-				if( $column->Key == 'PRI' )
-					$primary = $column->Field;
-				
-				if( $column->Field=='created_at' || $column->Field=='updated_at' )
-					$hasTimestamps ++;
-				
-				if( $hasTimestamps>=2 )
-					$timestamps = 'true';
-				
-			}
-			
-			$createFile = false;
-			$template = file_get_contents(__DIR__.'/templates/model.txt');
-			$template = str_replace(array('{model}', '{table}', '{primary}', '{timestamps}', '{relations}'), array($modelName, $tableName, $primary, $timestamps, $relationsStr), $template);
-			
-			$modelPath = app_path().'/models/'.$modelName.'.php';
-			if( file_exists($modelPath) ){
-				if( $this->confirm('Model '.$modelName.'.php exists, replace it? [y|N] ', false) ){
-					$createFile = true;
-				}
-			}else{
+		}
+		
+		$createFile = false;
+		$template = file_get_contents(__DIR__.'/templates/model.txt');
+		$template = str_replace(array('{model}', '{table}', '{primary}', '{timestamps}', '{relations}'), array($modelName, $tableName, $primary, $timestamps, $relationsStr), $template);
+		
+		$modelPath = app_path().'/models/'.$modelName.'.php';
+		if( file_exists($modelPath) ){
+			if( $this->confirm('Model '.$modelName.'.php exists, replace it? [y|N] ', false) ){
 				$createFile = true;
 			}
-			
-			if( $createFile ){
-				file_put_contents($modelPath, $template);
-				$this->info('created model "'.$modelName.'" with table "'.$tableName.'"');
-				$relationsStr = '';
-			}			
+		}else{
+			$createFile = true;
+		}
+		
+		if( $createFile ){
+			file_put_contents($modelPath, $template);
+			$this->info('created model "'.$modelName.'" with table "'.$tableName.'"');
+			$relationsStr = '';
 		}
 	}
 

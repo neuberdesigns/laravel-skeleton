@@ -19,173 +19,158 @@ class BuildView extends Command {
 	 * @var string
 	 */
 	protected $description = 'Build the view, list and add for each controller';
-
+	
+	protected $database;
 	/**
 	 * Create a new command instance.
 	 *
 	 * @return void
 	 */
-	public function __construct()
-	{
+	public function __construct(){
 		parent::__construct();
+		$this->database = new DatabaseInfo();
 	}
-
-	/**
-	 * Execute the console command.
-	 *
-	 * @return void
-	 */
-	public function fire()
-	{
-		$dbName = DB::getDatabaseName();
-		$tables = DB::select('SHOW TABLES');
+	
+	public function fire(){
 		$targetTable = $this->option('table');
+		if( !empty($targetTable) ){
+			$table = $this->database->find($targetTable);
+			if( $table ){
+				$this->buildView($table);
+			}else{
+				$this->error('table "'.$targetTable.'" was not found');
+			}
+		}else{
+			foreach( $this->database->getTables() as $table){
+				$this->buildView($table);
+			}
+		}
+	}
+	
+	public function buildView($table){
+		$primary = 'id';
+		$timestamps = 'false';
+		$hasTimestamps = 0;
 		
+		$tableName = $table->getName();
+		$createFile = false;
 		
-		foreach( $tables as $table ){			
-			$primary = 'id';
-			$timestamps = 'false';
-			$hasTimestamps = 0;
-			
-			$fullTableName = 'Tables_in_'.$dbName;
-			$tableName = $table->$fullTableName;
-			$createFile = false;
-			
-			if( !empty($targetTable) && $tableName!=$targetTable)
+		$dirName = str_replace('_', '-', $tableName);
+		
+		$viewPath = app_path().'/views/admin/';
+		
+		$fieldsList = array();
+		
+		$columns = $table->getFields();
+		foreach( $columns as $k=>$column ){
+			if( $column->isPrimaryKey() || $column->isMultiKey() || $column->getName()=='updated_at' || $column->getName()=='deleted_at' )
 				continue;
 			
-			//studly_case()
-			$controllerName = ucwords( str_replace('_', ' ', $tableName) );
-			$controllerName = str_replace(' ', '', $controllerName);
-			$dirName = str_replace('_', '-', $tableName);
+			$size = 5; //size of the field in columns (for bootstrap)
+			$inputType = 'text';
+			$type = $column->getType();
+			$inputList = $column->getOptions();
 			
-			$viewPath = app_path().'/views/admin/';
-			
-			$fieldsList = array();
-			
-			$columns = DB::select('SHOW COLUMNS FROM `'.$tableName.'`');
-			foreach( $columns as $k=>$column ){
-				if( $column->Key == 'PRI' || $column->Key == 'MUL' || $column->Field=='updated_at' || $column->Field=='deleted_at' )
-					continue;
-				
-				$size = 5;
-				$inputType = 'text';
-				$inputList = array();
-				$parentesisContent = 10;
-				
-				//starts_with();
-				$end = strpos($column->Type, '(');
-				$end = $end!==false ? $end : strlen($column->Type);
-				$type = substr($column->Type, 0, $end);
-				
-				//get content between () if exists
-				$start = strpos($column->Type, '(');
-				$end = strrpos($column->Type, ')');
-				if( $start!==false && $end!==false ){
-					$length = ( strlen($column->Type)-$start-2);
-					$parentesisContent = substr($column->Type, $start+1, $length );
-				}
-				
-				//if is a numeric value set the size
-				if( is_numeric($parentesisContent) ){
-					$size = $parentesisContent;
-					if( $size > 10 ){
-						while( $size>10 ){
-							$size = $size/3;
-						}
-						$size = floor($size);
+			if( !$column->hasOptions(true) ){
+				$size = $column->getSize();
+				if( $size > 10 ){
+					while( $size>10 ){
+						$size = $size/3;
 					}
-						
-					
-				}else{
-					//set the $inputList based on the contents of $parentesisContent
-					if( strpos($parentesisContent, ',') !== false ){
-						$enumValues = explode(',', $parentesisContent);
-						foreach ($enumValues as $v){
-							$inputList[] = $v;
-						}
-					}
+					$size = floor($size);
 				}
-				
-				if( $type=='text' || $type=='longtext' || $type=='mediumtext' || $type=='tinytext' ){
-					$inputType = 'textarea';
-					$size = 10;
-				
-				}else if( $type=='enum' || str_contains($column->Field, 'status') ){
-					$inputType = 'select';
-					
-				}else if( str_contains($column->Field, 'image') ){
-					$inputType = 'file';
-					$size = 10;
-				}
-								
-				$fieldsList[$k]['name'] = $column->Field;
-				$fieldsList[$k]['display_name'] = str_replace('_', ' ', $column->Field);
-				$fieldsList[$k]['type'] = $inputType;
-				$fieldsList[$k]['size'] = $size;
-				$fieldsList[$k]['values'] = $inputList;
-				
 			}
 			
-			if( file_exists($viewPath.$dirName) ){
-				if( $this->confirm('Directory "'.$dirName.'" exists, replace its contents? [y|N] ', false) ){
-					$createFile = true;
-				}
-			}else{
-				mkdir($viewPath.$dirName, 0775);
+			$isFile = str_contains($column->getName(), 'image') || str_contains($column->getName(), 'icon') || str_contains($column->getName(), 'file');
+			$isEnum = $column->typeOf('enum');
+			$isStatus = str_contains($column->getName(), 'status');
+			
+			if( $column->typeOf(array('text','longtext','mediumtext','tinytext')) ){
+				$inputType = 'textarea';
+				$size = 10;
+			
+			}else if( $isStatus || $isEnum ){
+				$inputType = 'select';
+				
+			}else if( $isFile ){
+				$inputType = 'file';
+				$size = 10;
+			}
+			
+			$fieldInfo = array();		
+			$fieldInfo['name'] = $column->getName();
+			$fieldInfo['displayName'] = $column->getDisplayName();
+			$fieldInfo['type'] = $inputType;
+			$fieldInfo['size'] = $size;
+			$fieldInfo['values'] = $inputList;
+			$fieldInfo['typeCheck'] = (object)array(
+				'isFile'=>$isFile,
+				'isEnum'=>$isEnum,
+				'isStatus'=>$isStatus,
+			);
+			
+			$fieldsList[] = (object)$fieldInfo;
+		}
+		
+		if( file_exists($viewPath.$dirName) ){
+			if( $this->confirm('Directory "'.$dirName.'" exists, replace its contents? [y|N] ', false) ){
 				$createFile = true;
 			}
+		}else{
+			mkdir($viewPath.$dirName, 0775);
+			$createFile = true;
+		}
+		
+		if( $createFile ){
+			$templateAdd = file(__DIR__.'/templates/view-add.txt');
+			$templateList = file_get_contents(__DIR__.'/templates/view-list.txt');
 			
-			if( $createFile ){
-				$templateAdd = file(__DIR__.'/templates/view-add.txt');
-				$templateList = file_get_contents(__DIR__.'/templates/view-list.txt');
+			$fieldsListStr = '';
+			$fieldsNameStr = '';
+			$fieldsFormStr = '';
+			
+			//sort($fieldsList);
+			foreach($fieldsList as $key=>$field){				
+				if( $key>0 ){
+					$fieldsListStr .= "\t\t\t\t";
+					$fieldsNameStr .= "\t\t\t\t";
+					$fieldsFormStr .= "\t\t";
+				}
 				
-				$fieldsListStr = '';
-				$fieldsNameStr = '';
-				$fieldsFormStr = '';
+				$inputFactoryCommands = array();
+				$fieldsListStr .= "<th>{{OrderLink::make('".ucfirst($field->displayName)."', '$field->name')}}</th>".PHP_EOL;
+				$fieldsNameStr .= '<td>{{$row->'.$field->name.'}}</td>'.PHP_EOL;
 				
-				sort($fieldsList);
-				foreach($fieldsList as $key=>$field){
+				$inputFactoryCommands[] = "InputFactory::create('$field->type')";
+				$inputFactoryCommands[] = "->name('$field->name', '".$field->displayName."')";
+				
+				if($field->typeCheck->isFile){
+					$inputFactoryCommands[] = "->size(".$field->size.")";
+					//$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
 					
-					if( $key>0 ){
-						$fieldsListStr .= "\t\t\t\t";
-						$fieldsNameStr .= "\t\t\t\t";
-						$fieldsFormStr .= "\t\t";
-					}
-					
-					$fieldsListStr .= "<th>{{OrderLink::make('".ucfirst($field['display_name'])."', '$field[name]')}}</th>".PHP_EOL;
-					$fieldsNameStr .= '<td>{{$row->'.$field['name'].'}}</td>'.PHP_EOL;
-					
-					$fieldsFormStr .= "{{InputFactory::create('$field[type]')->name('$field[name]', '".ucfirst($field['display_name'])."')";
-					
-					if( str_contains($field['name'], 'image') ){
-						$fieldsFormStr .= "->size(10)";
-						//$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
-						
-					}elseif( str_contains($field['name'], 'status') ){
-						$fieldsFormStr .= "
-									->addListItem('1', 'Ativo')
-									->addListItem('0', 'Inativo')";
+				}else if( $field->typeCheck->isStatus ){
+					$inputFactoryCommands[] = PHP_EOL."\t\t\t\t\t\t->addListItem('1', 'Ativo')";
+					$inputFactoryCommands[] = PHP_EOL."\t\t\t\t\t\t->addListItem('0', 'Inativo')";
 
-					}else if( !empty($field['values']) ){
-							foreach($field['values'] as $v){
-								$fieldsFormStr .= "\t\t\t\t\t->addListItem('$v', '$v')".PHP_EOL;
-							}
-						}
-					}
-					$fieldsFormStr .= '->build()}}'.PHP_EOL;
-					if( str_contains($field['name'], 'image') ){
-						$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
+				}else if( !empty($field->values) ){
+					foreach($field->values as $v){
+						$inputFactoryCommands[] = PHP_EOL."\t\t\t\t\t\t->addListItem('$v', '$v')";
 					}
 				}
-							
-				$templateList = str_replace( array('{fieldsList}', '{fieldsName}'), array($fieldsListStr, $fieldsNameStr), $templateList);
-				$templateAdd = str_replace( '{fieldsForm}', $fieldsFormStr, $templateAdd);
 				
-				file_put_contents($viewPath.$dirName.'/list.blade.php', $templateList);
-				file_put_contents($viewPath.$dirName.'/add.blade.php', $templateAdd);
-				$this->info('created views in "'.$dirName.'"');
+				$inputFactoryCommands[] = '->build()';
+				$fieldsFormStr .= '{{'.implode('', $inputFactoryCommands).'}}'.PHP_EOL;
+				if( $field->typeCheck->isFile ){
+					$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field->name."') )".PHP_EOL;
+				}
 			}
+						
+			$templateList = str_replace( array('{fieldsList}', '{fieldsName}'), array($fieldsListStr, $fieldsNameStr), $templateList);
+			$templateAdd = str_replace( '{fieldsForm}', $fieldsFormStr, $templateAdd);
+			
+			file_put_contents($viewPath.$dirName.'/list.blade.php', $templateList);
+			file_put_contents($viewPath.$dirName.'/add.blade.php', $templateAdd);
+			$this->info('created views in "'.$dirName.'"');
 		}
 	}
 

@@ -1,10 +1,10 @@
 @extends('layout.admin')
 
 @section('main-content')
-	<a href="{{URL::to('/admin/'.$controllerSegment.'/listagem')}}" class="btn btn-primary btn-lg">Voltar a Listagem</a>
-	<a href="{{URL::to('/admin/'.$controllerSegment.'/adicionar')}}" class="btn btn-primary btn-lg">Novo</a>
+	<a href="{{BaseAdminController::urlToList($controllerSegment)}}" class="btn btn-primary btn-lg">Voltar a Listagem</a>
+	<a href="{{BaseAdminController::urlToNew($controllerSegment)}}" class="btn btn-primary btn-lg">Novo</a>
 	
-	<h3>{{ucwords( str_replace('-', ' ', $controllerSegment) )}}</h3>
+	<h3>Novo - {{$controllerTitle}}</h3>
 	
 	{{Form::model($model, array('class'=>'form-horizontal', 'files'=>true) )}}
 	<fieldset>

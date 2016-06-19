@@ -19,15 +19,16 @@ class BuildControllers extends Command {
 	 * @var string
 	 */
 	protected $description = 'Build controllers based on tables on database.';
-
+	
+	protected $database;
 	/**
 	 * Create a new command instance.
 	 *
 	 * @return void
 	 */
-	public function __construct()
-	{
+	public function __construct(){
 		parent::__construct();
+		$this->database = new DatabaseInfo();
 	}
 
 	/**
@@ -35,57 +36,64 @@ class BuildControllers extends Command {
 	 *
 	 * @return void
 	 */
-	public function fire()
-	{
-		$dbName = DB::getDatabaseName();
-		$tables = DB::select('SHOW TABLES');
+	public function fire(){
 		$targetTable = $this->option('table');
-		
-		foreach( $tables as $table ){
-			$primary = 'id';
-			$timestamps = 'false';
-			$hasTimestamps = 0;
-			
-			$fullTableName = 'Tables_in_'.$dbName;
-			$tableName = $table->$fullTableName;
-			
-			if( !empty($targetTable) && $tableName!=$targetTable)
-				continue;
-			
-			$controllerName = ucwords( str_replace('_', ' ', $tableName) );
-			$controllerName = str_replace(' ', '', $controllerName);
-			
-			$columns = DB::select('SHOW COLUMNS FROM `'.$tableName.'`');
-			foreach( $columns as $column ){
-				if( $column->Key == 'PRI' )
-					$primary = $column->Field;
-				
-				if( $column->Field=='created_at' || $column->Field=='updated_at' )
-					$hasTimestamps ++;
-				
-				if( $hasTimestamps>=2 )
-					$timestamps = 'true';
-				
-			}
-			
-			$createFile = false;
-			
-			$modelPath = app_path().'/controllers/admin/'.$controllerName.'Controller.php';
-			if( file_exists($modelPath) ){
-				if( $this->confirm('Controller '.$controllerName.'Controller.php exists, replace it? [y|N] ', false) ){
-					$createFile = true;
-				}
+		if( !empty($targetTable) ){
+			$table = $this->database->find($targetTable);
+			if( $table ){
+				$this->buildController($table);
 			}else{
+				$this->error('table "'.$targetTable.'" was not found');
+			}
+		}else{
+			foreach( $this->database->getTables() as $table){
+				$this->buildController($table);
+			}
+		}
+	}
+	
+	
+	/**
+	 * Execute the console command.
+	 *
+	 * @return void
+	 */
+	public function buildController($table){
+		$primary = 'id';
+		$timestamps = 'false';
+		$hasTimestamps = 0;
+		
+		$controllerName = $table->getNameForClass();
+		
+		$columns = $table->getFields();
+		foreach( $columns as $column ){
+			if( $column->isPrimaryKey() )
+				$primary = $column->getName();
+			
+			if( $column->getName()=='created_at' || $column->getName()=='updated_at' )
+				$hasTimestamps ++;
+			
+			if( $hasTimestamps>=2 )
+				$timestamps = 'true';
+			
+		}
+		
+		$createFile = false;
+		$modelPath = app_path().'/controllers/admin/'.$controllerName.'Controller.php';
+		if( file_exists($modelPath) ){
+			if( $this->confirm('Controller '.$controllerName.'Controller.php exists, replace it? [y|N] ', false) ){
 				$createFile = true;
 			}
-			
-			if( $createFile ){
-				$template = file_get_contents(__DIR__.'/templates/controller.txt');
-				$template = str_replace(array('{controller}'), array($controllerName), $template);
-			
-				file_put_contents($modelPath, $template);
-				$this->info('created controller "'.$controllerName.'"');
-			}
+		}else{
+			$createFile = true;
+		}
+		
+		if( $createFile ){
+			$template = file_get_contents(__DIR__.'/templates/controller.txt');
+			$template = str_replace(array('{controller}'), array($controllerName), $template);
+		
+			file_put_contents($modelPath, $template);
+			$this->info('created controller "'.$controllerName.'"');
 		}
 	}
 

@@ -11,20 +11,14 @@
 |
 */
 
-App::before(function($request)
-{
-	define('MISSING_IMG', '0-no-image.jpg');
-	define('UPLOAD_DIR', 'uploads/');
-	define('UPLOAD_TEMP_DIR', 'uploads/temp/');
-	
-	define('EMAIL_NAME', 'Neuber Oliveira');
-	define('EMAIL_RECEIVER', 'atendimento@neuberdesigns.com.br');
-	define('EMAIL_SENDER', 'atendimento@neuberdesigns.com.br');
+App::before(function($request){
+	define('EMAIL_NAME', 'Receiver email name');
+	define('EMAIL_RECEIVER', 'receiver@domain.com');
+	define('EMAIL_SENDER', 'sender@domain.com');
 });
 
 
-App::after(function($request, $response)
-{
+App::after(function($request, $response){
 	//
 });
 
@@ -39,8 +33,7 @@ App::after(function($request, $response)
 |
 */
 
-Route::filter('auth', function()
-{
+Route::filter('auth', function(){
 	if (Auth::guest()) return Redirect::guest('login');
 });
 
@@ -61,8 +54,7 @@ Route::filter('auth.basic', function()
 |
 */
 
-Route::filter('guest', function()
-{
+Route::filter('guest', function(){
 	if (Auth::check()) return Redirect::to('/');
 });
 
@@ -77,8 +69,7 @@ Route::filter('guest', function()
 |
 */
 
-Route::filter('csrf', function()
-{
+Route::filter('csrf', function(){
 	if (Session::token() != Input::get('_token'))
 	{
 		throw new Illuminate\Session\TokenMismatchException;

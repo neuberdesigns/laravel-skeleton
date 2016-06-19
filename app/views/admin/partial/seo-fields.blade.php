@@ -1,8 +1,8 @@
 <!-- <fieldset>
 	<legend>SEO</legend> -->
-	{{BsFormField::make('title', 'Titulo', 8, 'text')}}
-	{{BsFormField::make('keywords', 'Palavras chave', 6, 'text')}}
-	{{BsFormField::make('description', 'Meta Descrição', 10, 'textarea')}}
+	{{InputFactory::create('text')->name('title', 'Titulo')->size(8)->build()}}
+	{{InputFactory::create('text')->name('keywords', 'Palavras chave')->size(6)->build()}}
+	{{InputFactory::create('text')->name('description', 'Meta Descrição')->size(10)->build()}}
 	
 	<input type="hidden" name="object_id" />
 <!-- </fieldset> -->
