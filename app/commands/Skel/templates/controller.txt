@@ -2,9 +2,13 @@
 class {controller}Controller extends BaseAdminController {
 	public function __construct(){
 		$this->model = new {controller}();
+		$this->controller = '{controller_seg}';
+		$this->controllerTitle = '{controller_title}';
 		$this->uploads = array();
 		$this->rules = array(
 			''=>'',
 		);
+		
+		parent::__construct();
 	}
 }

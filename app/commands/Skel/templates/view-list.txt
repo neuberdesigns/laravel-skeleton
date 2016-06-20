@@ -1,27 +1,92 @@
-@extends('layout.admin')
+	<!-- Default box -->
+	<div class="box">
+		<div class="box-header with-border">
+			<h3 class="box-title">Listagem</h3>
 
-@section('main-content')
-	<a href="{{BaseAdminController::urlToNew($controllerSegment)}}" class="btn btn-primary btn-lg">Adicionar</a>
-	
-	<h3>Listagem - {{$controllerTitle}}</h3>
-	<table class="table table-striped table-bordered table-hover">
-		<thead>
-			<tr>
-				{fieldsList}
-				<th>Ação</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach( $list as $k=>$row )
-			<tr>
-				{fieldsName}
-				<td>
-					@include('admin/partial/list-actions')
-				</td>
-			</tr>
-			@endforeach
-		</tbody>
-	</table>
-	
-	{{$pagination}}
-@endsection
+			<div class="box-tools pull-right">
+				<button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+					<i class="fa fa-minus"></i>
+				</button>
+			</div>
+		</div>
+		<!-- /.box-header -->
+		<div class="box-body">
+
+			<div class="row">
+				<div class="col-sm-6">
+					<div class="dataTables_length">
+						<label>Exibir
+							<select name="example1_length" aria-controls="example1" class="form-control input-sm">
+								<option value="10">10</option>
+								<option value="25">25</option>
+								<option value="50">50</option>
+								<option value="100">100</option>
+							</select> itens
+						</label>
+					</div>
+				</div>
+				<div class="col-sm-6">
+					<div id="example1_filter" class="dataTables_filter">
+						<label>Busca:
+							<input type="search" class="form-control input-sm" placeholder="" aria-controls="example1">
+						</label>
+					</div>
+				</div>
+			</div>
+
+			<table class="table table-bordered table-hover">
+				<thead>
+					<tr>
+						{fieldsList}						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach( $list as $k=>$row )
+					<tr>
+						{fieldsName}
+						<td>
+							@include('admin/partial/list-actions')
+						</td>
+					</tr>
+					@endforeach
+				</tbody>
+				
+				<tbody>
+				@if(empty($list))
+					<tr>
+						<td colspan="99" class="text-left">Nenhum resultado foi encontrado</td>
+					</tr>
+				@else
+					@foreach( $list as $k=>$row )
+					<tr>
+						{fieldsName}
+						<td>
+							@include('admin/partial/list-actions')
+						</td>
+					</tr>
+					@endforeach
+				@endif
+				</tbody>
+				<tfoot>
+					<tr>
+						{fieldsList}						<th></th>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+		<!-- /.box-body -->
+		<div class="box-footer">
+			<div class="row">
+				<div class="col-sm-5">
+					<!-- <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">Exibindo de <b>1 a 10</b> de 57 registros</div> -->
+				</div>
+				<div class="col-sm-7">
+					<div class="dataTables_paginate paging_simple_numbers" id="example2_paginate">
+						{{$pagination}}
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /.box-footer-->
+	</div>
+	<!-- /.box -->

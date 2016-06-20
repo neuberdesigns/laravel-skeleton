@@ -75,7 +75,7 @@ class BuildView extends Command {
 				$size = $column->getSize();
 				if( $size > 10 ){
 					while( $size>10 ){
-						$size = $size/3;
+						$size = $size/4;
 					}
 					$size = floor($size);
 				}
@@ -122,7 +122,8 @@ class BuildView extends Command {
 		}
 		
 		if( $createFile ){
-			$templateAdd = file(__DIR__.'/templates/view-add.txt');
+			$templateIndex = file_get_contents(__DIR__.'/templates/view-index.txt');
+			$templateAdd = file_get_contents(__DIR__.'/templates/view-add.txt');
 			$templateList = file_get_contents(__DIR__.'/templates/view-list.txt');
 			
 			$fieldsListStr = '';
@@ -132,9 +133,9 @@ class BuildView extends Command {
 			//sort($fieldsList);
 			foreach($fieldsList as $key=>$field){				
 				if( $key>0 ){
-					$fieldsListStr .= "\t\t\t\t";
-					$fieldsNameStr .= "\t\t\t\t";
-					$fieldsFormStr .= "\t\t";
+					$fieldsListStr .= "\t\t\t\t\t\t";
+					$fieldsNameStr .= "\t\t\t\t\t\t";
+					$fieldsFormStr .= "";
 				}
 				
 				$inputFactoryCommands = array();
@@ -143,12 +144,9 @@ class BuildView extends Command {
 				
 				$inputFactoryCommands[] = "InputFactory::create('$field->type')";
 				$inputFactoryCommands[] = "->name('$field->name', '".$field->displayName."')";
+				$inputFactoryCommands[] = "->size(".$field->size.")";
 				
-				if($field->typeCheck->isFile){
-					$inputFactoryCommands[] = "->size(".$field->size.")";
-					//$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field['name']."') )".PHP_EOL;
-					
-				}else if( $field->typeCheck->isStatus ){
+				if( $field->typeCheck->isStatus ){
 					$inputFactoryCommands[] = PHP_EOL."\t\t\t\t\t\t->addListItem('1', 'Ativo')";
 					$inputFactoryCommands[] = PHP_EOL."\t\t\t\t\t\t->addListItem('0', 'Inativo')";
 
@@ -159,7 +157,7 @@ class BuildView extends Command {
 				}
 				
 				$inputFactoryCommands[] = '->build()';
-				$fieldsFormStr .= '{{'.implode('', $inputFactoryCommands).'}}'.PHP_EOL;
+				$fieldsFormStr .= ($key==0?'':"\t\t\t\t\t").'{{'.implode('', $inputFactoryCommands).'}}'.PHP_EOL;
 				if( $field->typeCheck->isFile ){
 					$fieldsFormStr .= "\t\t@include('admin.partial.image-preview', array('field'=>'".$field->name."') )".PHP_EOL;
 				}
@@ -167,9 +165,11 @@ class BuildView extends Command {
 						
 			$templateList = str_replace( array('{fieldsList}', '{fieldsName}'), array($fieldsListStr, $fieldsNameStr), $templateList);
 			$templateAdd = str_replace( '{fieldsForm}', $fieldsFormStr, $templateAdd);
+			$templateIndex = str_replace( '{dirName}', $dirName, $templateIndex);
 			
-			file_put_contents($viewPath.$dirName.'/list.blade.php', $templateList);
+			file_put_contents($viewPath.$dirName.'/index.blade.php', $templateIndex);
 			file_put_contents($viewPath.$dirName.'/add.blade.php', $templateAdd);
+			file_put_contents($viewPath.$dirName.'/list.blade.php', $templateList);
 			$this->info('created views in "'.$dirName.'"');
 		}
 	}

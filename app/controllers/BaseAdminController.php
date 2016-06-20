@@ -3,6 +3,7 @@ class BaseAdminController extends BaseController {
 	protected $user;
 	protected $orderLink;
 	protected $controller;
+	protected $controllerTitle;
 	protected $model;
 	protected $viewList 		= 'list';
 	protected $viewAdd 			= 'add';
@@ -13,6 +14,7 @@ class BaseAdminController extends BaseController {
 	protected $aditionalData 	= array();
 	protected $belongsToUser 	= true;
 	
+	const ACTION_HOME 	= 'index';
 	const ACTION_EDIT 	= 'editar';
 	const ACTION_NEW 	= 'novo';
 	const ACTION_DELETE	= 'remover';
@@ -21,11 +23,14 @@ class BaseAdminController extends BaseController {
 	
 	public function __construct(){
 		$this->orderLink = new OrderLink();
-		View::share('isLoginPage', Request::is('admin/login') );
+		$isLoginPage = Request::is('admin/login');
+		View::share('isLoginPage', $isLoginPage );
+		View::share('controllerSegment', $this->controller);
+		View::share('controllerTitle', $this->controllerTitle);
 	}
 	
 	public function getIndex($id=null){
-		return $this->route($id, self::ACTION_LIST);
+		return $this->route($id, self::ACTION_HOME);
 	}
 	
 	public function getBusca(){
@@ -57,13 +62,21 @@ class BaseAdminController extends BaseController {
 			$response = $this->remove($id);
 		
 		}else if( $action==self::ACTION_LIST){
-			$response = $this->getlist(false);
+			$response = $this->getList(false);
 		
 		}else if( $action==self::ACTION_SEARCH){
-			$response = $this->getlist(true);
+			$response = $this->getList(true);
+		}else{
+			$response = $this->home(true);
 		}
 		
 		return $response;
+	}
+	
+	protected function home(){
+		$data = array();
+		$mergedData = array_merge($data, $this->add(null, true), $this->getList(false) );
+		return View::make('admin.'.$this->controller.'.index', $mergedData );
 	}
 	
 	protected function add($id, $isNew){
@@ -78,7 +91,8 @@ class BaseAdminController extends BaseController {
 		);
 		$mergedData = array_merge($data, $this->aditionalData);
 		
-		return View::make('site.'.$this->controller.'.'.$this->viewAdd, $mergedData );
+		//return View::make('admin.'.$this->controller.'.'.$this->viewAdd, $mergedData );
+		return $mergedData;
 	}
 	
 	protected function save($id){
@@ -137,7 +151,7 @@ class BaseAdminController extends BaseController {
 		return Redirect::to( self::urlToList($this->controller) );
 	}
 	
-	protected function getlist($isSearch=false){
+	protected function getList($isSearch=false){
 		$list = $isSearch ? $this->fetchSearch() : $this->fetchList();
 		
 		if( $this->orderLink->hasOrder() ){
@@ -154,24 +168,26 @@ class BaseAdminController extends BaseController {
 			'controller'=>$this->controller,
 		);
 		$data = $data+$this->aditionalData; 
-		return View::make('site.'.$this->controller.'.'.$this->viewList, $data);
+		//return View::make('admin.'.$this->controller.'.'.$this->viewList, $data);
+		return $data;
 	}
 	
 	protected function fetchList(){
-		$this->model = $this->model->byUser( $this->getUser()->id );
+		//$this->model = $this->model;
 		return $this->model;
 	}
 	
 	protected function fetchEdit($id){
-		$this->model = $this->model->byUser($this->getUser()->id)->find($id);
-		return $this->model;
+		//$this->model = $this->model->find($id);
+		return $this->model->find($id);
 	}
 	
 	protected function fetchSearch(){
 		$term = $this->orderLink->term;
-		$this->model = $this->model->byUser( $this->getUser()->id )->where('nome', 'like', "%$term%");
+		//$this->model = $this->model->where('name', 'like', "%$term%");
+		$model = $this->model->where('name', 'like', "%$term%");
 		
-		return $this->model;
+		return $model;
 	}
 	
 	protected function addSearchParam($model, $field, $operator='like', $column=null, $isOr=true){

@@ -1,16 +1,28 @@
-@extends('layout.admin')
+	<!-- Default box -->
+	<div class="box">
+		<div class="box-header with-border">
+			<h3 class="box-title">Novo {{$controllerTitle}}</h3>
 
-@section('main-content')
-	<a href="{{BaseAdminController::urlToList($controllerSegment)}}" class="btn btn-primary btn-lg">Voltar a Listagem</a>
-	<a href="{{BaseAdminController::urlToNew($controllerSegment)}}" class="btn btn-primary btn-lg">Novo</a>
-	
-	<h3>Novo - {{$controllerTitle}}</h3>
-	
-	{{Form::model($model, array('class'=>'form-horizontal', 'files'=>true) )}}
-	<fieldset>
-		{fieldsForm}
+			<div class="box-tools pull-right">
+				<button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+					<i class="fa fa-minus"></i>
+				</button>
+			</div>
+		</div>
 		
-		{{Form::submit('Salvar', array('class'=>'btn btn-primary pull-right') )}}
-	</fieldset>
-	{{Form::close()}}
-@endsection
+		{{Form::model($model, array('files'=>false) )}}
+			<!-- /.box-header -->
+			<div class="box-body">
+				<div class="row">
+					{fieldsForm}
+				</div>
+			</div>
+			<!-- /.box-body -->
+			
+			<div class="box-footer">
+				{{Form::submit('Salvar', array('class'=>'btn btn-primary pull-right') )}}
+			</div>
+			<!-- /.box-footer-->
+		{{Form::close()}}
+	</div>
+	<!-- /.box -->

@@ -64,6 +64,8 @@ class BuildControllers extends Command {
 		$hasTimestamps = 0;
 		
 		$controllerName = $table->getNameForClass();
+		$controllerSeg = str_replace('_', '-', $table->getName());
+		$controllerTitle = ucwords(str_replace('_', ' ', $table->getName()));
 		
 		$columns = $table->getFields();
 		foreach( $columns as $column ){
@@ -90,7 +92,7 @@ class BuildControllers extends Command {
 		
 		if( $createFile ){
 			$template = file_get_contents(__DIR__.'/templates/controller.txt');
-			$template = str_replace(array('{controller}'), array($controllerName), $template);
+			$template = str_replace(array('{controller}', '{controller_seg}', '{controller_title}'), array($controllerName, $controllerSeg, $controllerTitle), $template);
 		
 			file_put_contents($modelPath, $template);
 			$this->info('created controller "'.$controllerName.'"');

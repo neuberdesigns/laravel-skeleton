@@ -1,0 +1,6 @@
+@extends('layout.admin')
+
+@section('main-content')
+	@include('admin.brand.add')
+	@include('admin.brand.list')
+@endsection
