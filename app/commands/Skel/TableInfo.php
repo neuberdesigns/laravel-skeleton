@@ -20,11 +20,15 @@ class TableInfo {
 	}
 	
 	public function getNameForClass(){
-		/*$className = ucwords( str_replace('_', ' ', $this->getName()) );
-		$className = str_replace(' ', '', $className);
-		return $className;*/
-		
 		return studly_case($this->getName());
+	}
+	
+	public function getNameForSegment(){
+		return str_replace('_', '-', $this->getName());
+	}
+	
+	public function getNameForTitle(){
+		return ucwords(str_replace('_', ' ', $this->getName()));
 	}
 	
 	public function getDatabase(){

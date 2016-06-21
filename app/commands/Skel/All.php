@@ -24,9 +24,20 @@ class All extends Command {
 	 *
 	 * @return void
 	 */
-	public function __construct()
-	{
+	public function __construct(){
 		parent::__construct();
+	}
+
+	/**
+	 * Get the console command options.
+	 *
+	 * @return array
+	 */
+	protected function getOptions(){
+		return array(
+			array('table', 't', InputOption::VALUE_OPTIONAL, 'Create controller, model and views for epecified table', null),
+			array('segment', 's', InputOption::VALUE_OPTIONAL, 'The name for controller segment and views dir', null),
+		);
 	}
 
 	/**
@@ -36,11 +47,12 @@ class All extends Command {
 	 */
 	public function fire(){
 		$target = $this->option('table');
-		$this->call('skel:controller', array('-t' => $target));
-		$this->call('skel:model', array('-t' => $target));
-		$this->call('skel:view', array('-t' => $target));
+		$seg = $this->option('segment');
+		$this->call('skel:controller', array('-t' => $target, '-s'=>$seg));
+		$this->call('skel:model', array('-t' => $target, '-s'=>$seg));
+		$this->call('skel:view', array('-t' => $target, '-s'=>$seg));
 		
-		$this->info('generate autoload');
+		$this->info('generating autoload');
 		Artisan::call('dump-autoload');
 		$this->info('done');
 	}
@@ -54,18 +66,6 @@ class All extends Command {
 	{
 		return array(
 			//array('example', InputArgument::REQUIRED, 'An example argument.'),
-		);
-	}
-
-	/**
-	 * Get the console command options.
-	 *
-	 * @return array
-	 */
-	protected function getOptions()
-	{
-		return array(
-			array('table', 't', InputOption::VALUE_OPTIONAL, 'Create controller, model and views for epecified Table', null),
 		);
 	}
 

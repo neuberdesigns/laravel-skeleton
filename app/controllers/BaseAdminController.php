@@ -1,5 +1,5 @@
 <?php
-class BaseAdminController extends BaseController {
+abstract class BaseAdminController extends BaseController {
 	protected $user;
 	protected $orderLink;
 	protected $controller;
@@ -25,6 +25,7 @@ class BaseAdminController extends BaseController {
 	const ACTION_SEARCH	= 'busca';
 	
 	public function __construct(){
+		$this->start();
 		$this->orderLink = new OrderLink();
 		$isLoginPage = Request::is('admin/login');
 		View::share('isLoginPage', $isLoginPage );
@@ -32,6 +33,7 @@ class BaseAdminController extends BaseController {
 		View::share('controllerTitle', $this->controllerTitle);
 	}
 	
+	protected abstract function start();
 	protected function hookBeforeSave($model){}
 	protected function hookAfterSave($model){}
 	

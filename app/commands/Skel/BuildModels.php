@@ -4,7 +4,7 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class BuildModels extends Command {
+class BuildModels extends AbstractSkel {
 
 	/**
 	 * The console command name.
@@ -20,36 +20,14 @@ class BuildModels extends Command {
 	 */
 	protected $description = 'Build the models based on the database.';
 
-	protected $database;
-	/**
-	 * Create a new command instance.
-	 *
-	 * @return void
-	 */
-	public function __construct(){
-		parent::__construct();
-		$this->database = new DatabaseInfo();
-	}
-
+	
 	/**
 	 * Execute the console command.
 	 *
 	 * @return void
 	 */
 	public function fire(){
-		$targetTable = $this->option('table');
-		if( !empty($targetTable) ){
-			$table = $this->database->find($targetTable);
-			if( $table ){
-				$this->buildModel($table);
-			}else{
-				$this->error('table "'.$targetTable.'" was not found');
-			}
-		}else{
-			foreach( $this->database->getTables() as $table){
-				$this->buildModel($table);
-			}
-		}
+		$this->init('buildModel');
 	}
 	
 	public function buildModel($table){
@@ -104,23 +82,19 @@ class BuildModels extends Command {
 	 *
 	 * @return array
 	 */
-	protected function getArguments()
-	{
+	protected function getArguments(){
 		return array(
 			//array('example', InputArgument::REQUIRED, 'An example argument.'),
 		);
 	}
-
+	
 	/**
 	 * Get the console command options.
 	 *
 	 * @return array
 	 */
-	protected function getOptions()
-	{
-		return array(
-			array('table', 't', InputOption::VALUE_OPTIONAL, 'Create the model for epecified Table', null),
-		);
+	protected function getOptions(){
+		return $this->getDefaultOptions();
 	}
 	
 }

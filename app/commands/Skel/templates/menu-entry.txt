@@ -1,0 +1,5 @@
+	<li class="treeview">
+		<a href="{{BaseAdminController::urlToIndex('{seg}')}}">
+			<i class=""></i> <span>{title}</span></i>
+		</a>
+	</li>

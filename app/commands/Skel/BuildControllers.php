@@ -4,7 +4,7 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class BuildControllers extends Command {
+class BuildControllers extends AbstractSkel {
 
 	/**
 	 * The console command name.
@@ -20,36 +20,14 @@ class BuildControllers extends Command {
 	 */
 	protected $description = 'Build controllers based on tables on database.';
 	
-	protected $database;
-	/**
-	 * Create a new command instance.
-	 *
-	 * @return void
-	 */
-	public function __construct(){
-		parent::__construct();
-		$this->database = new DatabaseInfo();
-	}
-
+	
 	/**
 	 * Execute the console command.
 	 *
 	 * @return void
 	 */
 	public function fire(){
-		$targetTable = $this->option('table');
-		if( !empty($targetTable) ){
-			$table = $this->database->find($targetTable);
-			if( $table ){
-				$this->buildController($table);
-			}else{
-				$this->error('table "'.$targetTable.'" was not found');
-			}
-		}else{
-			foreach( $this->database->getTables() as $table){
-				$this->buildController($table);
-			}
-		}
+		$this->init('buildController');
 	}
 	
 	
@@ -64,8 +42,8 @@ class BuildControllers extends Command {
 		$hasTimestamps = 0;
 		
 		$controllerName = $table->getNameForClass();
-		$controllerSeg = str_replace('_', '-', $table->getName());
-		$controllerTitle = ucwords(str_replace('_', ' ', $table->getName()));
+		$controllerSeg = $this->canUseSegment() ? $this->getSegment() : $table->getNameForSegment();
+		$controllerTitle = $table->getNameForTitle();
 		
 		$columns = $table->getFields();
 		foreach( $columns as $column ){
@@ -104,23 +82,18 @@ class BuildControllers extends Command {
 	 *
 	 * @return array
 	 */
-	protected function getArguments()
-	{
+	protected function getArguments(){
 		return array(
 			//array('example', InputArgument::REQUIRED, 'An example argument.'),
 		);
 	}
-
+	
 	/**
 	 * Get the console command options.
 	 *
 	 * @return array
 	 */
-	protected function getOptions()
-	{
-		return array(
-			array('table', 't', InputOption::VALUE_OPTIONAL, 'Create views for epecified Table', null),
-		);
+	protected function getOptions(){
+		return $this->getDefaultOptions();
 	}
-
 }

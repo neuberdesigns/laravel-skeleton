@@ -1,6 +1,6 @@
 <?php
 class {controller}Controller extends BaseAdminController {
-	public function __construct(){
+	protected function start(){
 		$this->model = new {controller}();
 		$this->controller = '{controller_seg}';
 		$this->controllerTitle = '{controller_title}';
@@ -8,7 +8,5 @@ class {controller}Controller extends BaseAdminController {
 		$this->rules = array(
 			''=>'',
 		);
-		
-		parent::__construct();
 	}
 }
