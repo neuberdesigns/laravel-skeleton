@@ -3,30 +3,31 @@ class AdminController extends BaseAdminController {
 	public function __construct(){
 		parent::__construct();
 		$this->model = new Admin();
+		$this->controller = 'admin';
+		$this->controllerTitle = 'Admin';
 		$this->uploads = array();
 		$this->except = array('password');
 		$this->rules = array(
 			'name'=>'required',
-			'email'=>'required',
+			'email'=>'required|email',
 			'password'=>'required',
-		);
-	}
-	public function getIndex($id=null){
-		if( Auth::guest() )
-			return Redirect::to('admin/login');
-		else
-			return View::make('admin.home');
+		);		
+		parent::__construct();
 	}
 	
-	public function getLogin(){
+	public function index(){
+		return Redirect::to('admin/login');
+	}
+	
+	public function login(){
 		//var_dump( Hash::make('123') );
 		if( Auth::check() )
-			return Redirect::to('admin/index');
+			return Redirect::to('admin/dashboard');
 		else
-			return View::make('admin.login');
+			return View::make('admin..admin.login');
 	}
 	
-	public function postProcessLogin(){
+	public function processLogin(){
 		$userdata = array(
 			'email'=>Input::get('email'),
 			'password'=>Input::get('password')
@@ -59,13 +60,13 @@ class AdminController extends BaseAdminController {
 		}
 		
 		if( Auth::attempt( $userdata ) ){
-			return Redirect::to('admin/index');
+			return Redirect::to('admin/dashboard');
 		}else{
 			return Redirect::to('admin/login')->with('login_errors', true);
 		}
 	}
 	
-	public function getLogout(){
+	public function logout(){
 		Auth::logout();
 		return Redirect::to('admin/login');
 	}
@@ -79,7 +80,7 @@ class AdminController extends BaseAdminController {
 		return parent::postAdicionar( Auth::user()->id );
 	}*/
 	
-	protected function beforeSave($model){
+	protected function hookBeforeSave($model){
 		$pass = trim( Input::get('password') );
 		
 		if( !empty($pass) ){

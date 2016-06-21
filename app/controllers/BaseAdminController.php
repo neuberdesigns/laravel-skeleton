@@ -5,6 +5,8 @@ class BaseAdminController extends BaseController {
 	protected $controller;
 	protected $controllerTitle;
 	protected $model;
+	protected $searchField 		= 'name';
+	protected $viewIndex 		= 'index';
 	protected $viewList 		= 'list';
 	protected $viewAdd 			= 'add';
 	protected $createdAt		= 'criado_em';
@@ -15,6 +17,7 @@ class BaseAdminController extends BaseController {
 	protected $belongsToUser 	= true;
 	
 	const ACTION_HOME 	= 'index';
+	const ACTION_SAVE 	= 'save';
 	const ACTION_EDIT 	= 'editar';
 	const ACTION_NEW 	= 'novo';
 	const ACTION_DELETE	= 'remover';
@@ -29,27 +32,30 @@ class BaseAdminController extends BaseController {
 		View::share('controllerTitle', $this->controllerTitle);
 	}
 	
-	public function getIndex($id=null){
-		return $this->route($id, self::ACTION_HOME);
+	protected function hookBeforeSave($model){}
+	protected function hookAfterSave($model){}
+	
+	public function anyIndex($id=null){
+		return $this->home($id);
 	}
 	
 	public function getBusca(){
-		return $this->route(null, self::ACTION_SEARCH);
+		return $this->home(null, null, true);
 	}
 	
 	public function anyEditar($id=null){
-		return $this->route($id, self::ACTION_EDIT);
+		return $this->home($id);
 	}
 	
-	public function anyNovo($id=null){
-		return $this->route($id, self::ACTION_NEW);
+	public function postSave($id=null){
+		return $this->home($id);
 	}
 	
 	public function getRemover($id=null){
-		return $this->route($id, self::ACTION_DELETE);
+		return $this->remove($id);
 	}
 	
-	protected function route($id, $action=null){
+	/*protected function route($id, $action=null){
 		$response = null;
 		if( $action==self::ACTION_NEW || $action==self::ACTION_EDIT ){
 			if( Request::isMethod('post') ){
@@ -71,28 +77,63 @@ class BaseAdminController extends BaseController {
 		}
 		
 		return $response;
+	}*/
+	
+	protected function home($id=null, $isNew=false, $isSearch=false){
+		if( Request::isMethod('post') ){
+			return $this->save($id);
+		}else{
+			$data = array('controller'=>$this->controller, 'perpage'=>$this->orderLink->perpage);
+			$dataForAdd 	= $this->add($id, $isNew);
+			$dataForList 	= $this->getList($isSearch);
+			
+			$mergedData 	= array_merge($data, $dataForAdd, $dataForList);
+			//var_dump($this->controller);exit;
+			return View::make('admin.'.$this->controller.'.'.$this->viewIndex, $mergedData );
+		}
 	}
 	
-	protected function home(){
-		$data = array();
-		$mergedData = array_merge($data, $this->add(null, true), $this->getList(false) );
-		return View::make('admin.'.$this->controller.'.index', $mergedData );
-	}
-	
-	protected function add($id, $isNew){
+	protected function add($id, $isNew=true){
 		$formModel = $this->fetchEdit($id);
 		$isEmpty = empty($formModel);
 		$data = array(
-			'controller'=>$this->controller,
 			'model'=>$formModel,
 			'isEmpty'=>$isEmpty,
 			'isNew'=>$isNew,
-			'belongsToMe'=>(!$isEmpty ? $formModel->usuario_id == $this->getUser()->id : false),
 		);
+		
 		$mergedData = array_merge($data, $this->aditionalData);
 		
 		//return View::make('admin.'.$this->controller.'.'.$this->viewAdd, $mergedData );
 		return $mergedData;
+	}
+	
+	protected function getList($isSearch=false){
+		$paginationSizeDefault = 10;
+		$paginationSize = $this->orderLink->perpage;
+		
+		if(!$paginationSize){
+			$paginationSize = $paginationSizeDefault;
+		}
+		
+		$list = $isSearch ? $this->fetchSearch() : $this->fetchList();
+		
+		
+		if( $this->orderLink->hasOrder() ){
+			$list = $list->orderBy( $this->orderLink->order, $this->orderLink->direction );
+		}
+		
+		$paginator = $list->paginate($paginationSize);
+		$paginator->appends( $this->orderLink->getParams() );
+		
+		$data = array(
+			'list'=>$paginator->getItems(),
+			'pagination'=>$paginator->links(),
+			'paginator'=>$paginator,
+		);
+		$data = array_merge($data, $this->aditionalData); 
+		//return View::make('admin.'.$this->controller.'.'.$this->viewList, $data);
+		return $data;
 	}
 	
 	protected function save($id){
@@ -109,22 +150,24 @@ class BaseAdminController extends BaseController {
 				}
 			}
 			
-			$files = FileUpload::batch($this->uploads, 'temp');
+			$files = array();
+			foreach($this->uploads as $uploadFieldName){
+				$upload = FileUpload::make()->field($uploadFieldName)->destination(FileUpload::DESTINATION_TEMP)->receive();
+				if($upload->isUploaded()){
+					$files[] = $upload;
+				}else{
+					var_dump($upload->getError()->getMEssage());
+					exit;
+				}
+			}
 			
 			if( !empty($this->model) ){
 				$this->deleteOldUploads($files);
 			}
 			$this->model->fill( Input::except($this->except) );
 			
-			if( $this->belongsToUser )
-				$this->model->usuario_id = $this->getUser()->id;
+			$this->moveUploads($files);
 			
-			$this->makeUploads($files);
-			
-			if( $isNew && !empty($this->createdAt) ){
-				$field = $this->createdAt;
-				$this->model->$field = date('Y-m-d H:i:s');
-			}
 			
 			$this->hookBeforeSave($this->model);
 			if( $this->model->save() ){
@@ -134,10 +177,10 @@ class BaseAdminController extends BaseController {
 				Session::flash('save_fail', 'Ops! Ocorreu um erro ao salvar');
 			}
 			
-			return Redirect::to( self::urlToEdit($this->controller, $this->model->getKey()) );
+			return Redirect::to(self::urlToEdit($this->controller, $this->model->getKey()));
 		}else{
 			Input::flash();
-			return Redirect::to( URL::current() )->withErrors($validator);
+			return Redirect::to( self::urlToIndex($this->controller) )->withErrors($validator);
 		}
 	}
 	
@@ -148,28 +191,7 @@ class BaseAdminController extends BaseController {
 			$row->delete();
 		}
 		
-		return Redirect::to( self::urlToList($this->controller) );
-	}
-	
-	protected function getList($isSearch=false){
-		$list = $isSearch ? $this->fetchSearch() : $this->fetchList();
-		
-		if( $this->orderLink->hasOrder() ){
-			$list = $list->orderBy( $this->orderLink->order, $this->orderLink->direction );
-		}
-		
-		$paginator = $list->paginate(30);
-		$paginator->appends( $this->orderLink->getParams() );
-		
-		$data = array(
-			'list'=>$paginator->getItems(),
-			'pagination'=>$paginator->links(),
-			'paginator'=>$paginator,
-			'controller'=>$this->controller,
-		);
-		$data = $data+$this->aditionalData; 
-		//return View::make('admin.'.$this->controller.'.'.$this->viewList, $data);
-		return $data;
+		return Redirect::to( self::urlToIndex($this->controller) );
 	}
 	
 	protected function fetchList(){
@@ -185,7 +207,7 @@ class BaseAdminController extends BaseController {
 	protected function fetchSearch(){
 		$term = $this->orderLink->term;
 		//$this->model = $this->model->where('name', 'like', "%$term%");
-		$model = $this->model->where('name', 'like', "%$term%");
+		$model = $this->model->where($this->searchField, 'like', "%$term%");
 		
 		return $model;
 	}
@@ -209,9 +231,6 @@ class BaseAdminController extends BaseController {
 		return $model;
 	}
 	
-	protected function hookBeforeSave($model){}
-	protected function hookAfterSave($model){}
-	
 	public static function buildSelectList($collection, $prop, $key='id', $allowEmpty=true, $allowEmptyText='-- Selecione --'){
 		$list = array();
 		if( $allowEmpty )
@@ -229,7 +248,7 @@ class BaseAdminController extends BaseController {
 			if( !empty($files) ){
 				foreach( $this->uploads as $k=>$v ){
 					if( !empty($files[$k]) ){
-						FileUpload::delete($this->model->$v);
+						FileUpload::make($this->model->$v)->delete();
 						$this->model->$v = null;
 					}
 				}
@@ -237,14 +256,12 @@ class BaseAdminController extends BaseController {
 		}
 	}
 	
-	protected function makeUploads($files){
-		foreach ($files as $key => $filename) {
-			if( !empty($filename) ){
-				$fieldName = $this->uploads[$key];
-				$this->model->$fieldName = $filename;
-			}
+	protected function moveUploads($uploads){
+		foreach($uploads as $upload) {
+			$fieldName = $upload->getFieldName();
+			$upload->move();
+			$this->model->$fieldName = $upload->getUploadedName();
 		}
-		FileUpload::moveBatch($files);
 	}
 	
 	/* ---------------------------------------- */
@@ -259,7 +276,7 @@ class BaseAdminController extends BaseController {
 		$row = $this->model->find($id);
 		
 		if( !empty($row) && (isset($row->$field) && !is_null($row->$field) ) ){
-			FileUpload::delete($row->$field);
+			FileUpload::make($row->$field)->delete();
 			$row->$field = null;
 			$row->save();
 			$json->setSuccess('Imagem removida');
@@ -273,38 +290,25 @@ class BaseAdminController extends BaseController {
 	
 	
 	/* ---------------------------------------- */
-	protected function getUserFromSession(){
-		return unserialize( Session::get(SESSION_USER) );
-	}
-	
-	protected function getUser(){
-		return $this->user;
-	}
-	
-	public static function urlTo($controller, $action, $id=null){
+	public static function urlTo($controller, $action=null, $id=null, $keepQueryString=true){
 		$orderLink = new OrderLink();
 		$root 		= Request::root().'/admin'.(!empty($controller)?'/':'').$controller;
 		$actionSeg 	= !empty($action) ? '/'.$action : '';
 		$idSeg 		= !empty($id) ? '/'.$id : '';
-		$queryString = $orderLink->getQueryString();
+		$queryString = null;
+		
+		if($keepQueryString)
+			$queryString = $orderLink->getQueryString();
 		
 		return $root.$actionSeg.$idSeg.$queryString;
 	}
 	
-	public static function urlToRoot(){
-		return self::urlTo(null, null, null);
-	}
-	
-	public static function urlToNew($controller, $id=null){
-		return self::urlTo($controller, self::ACTION_NEW, $id);
+	public static function urlToIndex($controller){
+		return self::urlTo($controller, null, null, false);
 	}
 	
 	public static function urlToEdit($controller, $id=null){
 		return self::urlTo($controller, self::ACTION_EDIT, $id);
-	}
-	
-	public static function urlToList($controller){
-		return self::urlTo($controller, null);
 	}
 	
 	public static function urlToSearch($controller){
@@ -313,5 +317,9 @@ class BaseAdminController extends BaseController {
 	
 	public static function urlToDelete($controller, $id=null){
 		return self::urlTo($controller, self::ACTION_DELETE, $id);
+	}
+	
+	public static function urlToSave($controller, $id=null){
+		return self::urlTo($controller, self::ACTION_SAVE, $id, false);
 	}
 } 

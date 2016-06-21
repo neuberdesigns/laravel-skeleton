@@ -1,7 +1,6 @@
 $('document').ready(function(){
-	ajaxRequest.init({
-		img_url: baseUrl+'images/',
-	});
+	var ajaxRequest = AjaxRequest();
+	ajaxRequest.setBaseUrl(baseUrlAdmin);
 	
 	var placeholder = {placeholder:'_'};
 	$('.mask-datetime').mask('99/99/9999 99:99', placeholder);
@@ -13,6 +12,36 @@ $('document').ready(function(){
 	if( $('.sortable').length>0 ){
 		$('.sortable').sortable();
 	}
+	
+	$('#pagination-itens-perpage').on('change', function(){
+		var qs = location.search;
+		var url = location.protocol+'//'+location.hostname+location.pathname;
+		var result = [];
+		var perpage = 'perpage=';
+		
+		if(qs==''){
+			qs = '?'+perpage;
+		}else{
+			result = qs.match(/^(\?|&)perpage=(\d+)/);
+			if(result[0]){
+				qs = result[1]+perpage+qs.replace(result[0], '');
+			}else{
+				qs += '&'+perpage;
+			}
+		}
+		
+		qs += $(this).val();
+		console.log(url+qs);
+		//window.location = url+qs;
+		location.replace(url+qs);
+	});
+	
+	$('.bt-delete-row').on('click', function(e){
+		var remove = confirm('Deseja realmente remover este item?\nEsta ação não pode ser desfeita.');
+		if(!remove){
+			e.preventDefault();
+		}
+	});
 	
 	$('.bt-save-order').on('click', function(){
 		var order = [];
@@ -26,14 +55,14 @@ $('document').ready(function(){
 		post = {'list':order};
 		
 		console.log(post, order);
-		ajaxRequest.request(baseUrlAdmin+controllerName+'/ajax-organize', null, post );
+		ajaxRequest.endpoint(controllerName+'/ajax-organize').data(post).request();
 	});
 	
 	$('.bt-seo-save').on('click', function(){
 		var $form = $(this).closest('form');
 		var $modal = $('#seoModal');
 		
-		ajaxRequest.request(baseUrlAdmin+getSegment(3)+'/ajax-seo-save', '.seo-save-loader', $form.serialize(), function(r){
+		ajaxRequest.endpoint(getSegment(3)+'/ajax-seo-save').data($form.serialize()).request('.seo-save-loader').then(function(r){
 			if( r.status==200 ){
 				$modal.find('form [name="title"]').val('');
 				$modal.find('form [name="keywords"]').val('');
@@ -49,7 +78,7 @@ $('document').ready(function(){
 		var id = parseInt( $(this).attr('data-id') );
 		var $modal = $('#seoModal');
 		
-		ajaxRequest.request(baseUrlAdmin+getSegment(3)+'/ajax-seo-load', '.seo-load-loader', {'id': id}, function(r){
+		ajaxRequest.endpoint(getSegment(3)+'/ajax-seo-load').data({'id': id}).request('.seo-load-loader').then(function(r){
 			if( r.status==200 ){
 				var seo = r.data;
 				$modal.find('form [name="title"]').val( seo.title);
@@ -71,13 +100,14 @@ $('document').ready(function(){
 			$(this).find('.image-control').animate({'top':'-20px'});
 		});
 		
-		$('.bt-preview-image-delete').click(function(){
+		$('.bt-preview-image-delete').click(function(e){
+			e.preventDefault();
 			var $self = $(this);
 			var post = {
 				'id': $(this).attr('data-id'),
 				'field': $(this).attr('data-field'),
 			}
-			ajaxRequest.request(baseUrlAdmin+getSegment(3)+'/delete-image', null, post, function(r){
+			ajaxRequest.endpoint(getSegment(3)+'/ajax-delete-image').data(post).request().then(function(r){
 				console.log(r, $self);
 				if( r.status==200 ){
 					$self.closest('.preview-image').css('background', '#F00').fadeOut(900, function(){

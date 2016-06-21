@@ -3,7 +3,7 @@ class InputFactory {
 	public static function create($type){
 		$input = 'Input'.studly_case($type);
 		if(class_exists($input)){
-			return new $input();
+			return new $input($type);
 		}
 		else {
 			throw new Exception("Invalid input type given");

@@ -110,6 +110,16 @@ class OrderLink {
 		}
 	}
 	
+	public function removeParam($name){
+		if($this->hasParam($name)){
+			unset($this->queryString[$name]);
+		}
+	}
+	
+	public function clear(){
+		$this->queryString = array();
+	}
+	
 	public function getParams($formated=false){
 		return $formated ? $this->getFormatedParams() : $this->queryString;
 	}

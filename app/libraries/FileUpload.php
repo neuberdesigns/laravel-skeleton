@@ -1,8 +1,8 @@
 <?php
 
 class FileUpload {
-	const UPLOAD_DIR = 'upload/';
-	const TEMP_DIR = 'upload/temp/';
+	const UPLOAD_DIR = 'uploads/';
+	const TEMP_DIR = 'uploads/temp/';
 	const MISSING_IMG = '0-no-image.jpg';
 	
 	const DESTINATION_FINAL = 0;
@@ -22,15 +22,16 @@ class FileUpload {
 	
 	
 	
-	public static function make(){
-		$instance = new FileUpload();
+	public static function make($filename=null){
+		$instance = new FileUpload($filename);
 		return $instance;
 	}
 	
-	protected function __construct(){
+	protected function __construct($filename=null){
 		$base = public_path().'/';
-		$this->uploadPath = $base.UPLOAD_DIR;
-		$this->tempPath = $base.UPLOAD_TEMP_DIR;
+		$this->uploadPath = $base.self::UPLOAD_DIR;
+		$this->tempPath = $base.self::TEMP_DIR;
+		$this->uploadedName = $filename;
 	}
 	
 	public function field($name){
@@ -40,13 +41,13 @@ class FileUpload {
 	
 	public function destination($type){
 		$this->destinationType = $type;
-		$this->destinationDir = self::DESTINATION_TEMP ? self::UPLOAD_TEMP_DIR : self::UPLOAD_DIR;
+		$this->destinationDir = self::DESTINATION_TEMP ? self::TEMP_DIR : self::UPLOAD_DIR;
 		return $this;
 	}
 	
 	
 	public function getDestinationPath(){
-		return ($this->destinationType==self::DESTINATION_FINAL ? $this->getUploadPath() : $this->getTempPath() )
+		return ($this->destinationType==self::DESTINATION_FINAL ? $this->getUploadPath() : $this->getTempPath() );
 	}
 	
 	public function isUploaded(){
@@ -65,13 +66,23 @@ class FileUpload {
 		return $this->uploadPath.($withUploadedFile?$this->getUploadedName():'');
 	}
 	
+	public function getFieldName(){
+		return $this->fieldName;
+	}
+	
+	public function getError(){
+		return $this->error;
+	}
+	
+	public function hasError(){
+		return !empty($this->error);
+	}
+	
 	public function receive(){
 		if( Input::hasFile($this->fieldName) ){
 			$file = Input::file($this->fieldName);
 						
-			$ext = $file->getClientOriginalExtension();
-			$dest = ;
-			
+			$ext = $file->getClientOriginalExtension();			
 			$newName = uniqid().'.'.$ext;
 			
 			try {
@@ -80,17 +91,17 @@ class FileUpload {
 				$this->uploaded = true;
 			}catch(Exception $exception){
 				$this->error = $exception;
-				$this->uploaded = true;
+				$this->uploaded = false;
 			}
 		}
 		
-		return $this->isUploaded();
+		return $this;
 	}
 	
 	//TODO refactor to use class insted static things
 	private static function fromUrl($url, $type='upload'){
 		$base = public_path().'/';
-		$dest = $type=='upload' ? $base.UPLOAD_DIR :  $base.UPLOAD_TEMP_DIR;
+		$dest = $type=='upload' ? $base.self::UPLOAD_DIR :  $base.self::TEMP_DIR;
 		$newName = uniqid();
 		$fileinfo = false;
 		try {
@@ -113,17 +124,17 @@ class FileUpload {
 	}
 	
 	//TODO refactor to use class insted static things
-	private static function batch($files, $type='upload'){
+	public static function batch($files, $type='upload'){
 		$list = array();
 		
-		foreach ($files as $key => $value) {
+		foreach($files as $key=>$value) {
 			$list[] = self::make($value, $type);
 		}
 		
 		return $list;
 	}
 	
-	public static function move(){
+	public function move(){
 		$moved = false;
 		$src = $this->getTempPath(true);
 		$target = $this->getUploadPath(true);
@@ -138,17 +149,17 @@ class FileUpload {
 	}
 	
 	//TODO refactor to use class insted static things
-	private static function moveBatch($filenames){
+	public static function moveBatch($filenames){
 		foreach ($filenames as $key => $value) {
-			$src = public_path().'/'.UPLOAD_TEMP_DIR.$value;
-			$target = public_path().'/'.UPLOAD_DIR.$value;
+			$src = public_path().'/'.(self::TEMP_DIR).$value;
+			$target = public_path().'/'.(self::UPLOAD_DIR).$value;
 			
 			if( is_file($src) )
 				rename($src, $target);
 		}
 	}
 	
-	public function get(){
+	public function getUrl(){
 		$target = $this->getUploadPath(true);
 		
 		if( is_file($target) )
@@ -157,15 +168,15 @@ class FileUpload {
 			return URL::asset( self::UPLOAD_DIR.self::MISSING_IMG );
 	}
 	
-	public function getTim($width=null, $height=null, $zc=2, $attribs=array(), $url=true ){
+	public function getTim($width=null, $height=null, $zc=null, $attribs=array(), $url=true ){
 		$tim = new Timthumb();
-		$tim->setZc($zc);
+		$tim->setZc(!$zc?2:$zc);
 		$tim->setWidth($width);
 		$tim->setHeight($height);
 		$tim->setBase(URL::to('').'/');
 		
 		$alt = isset($attribs['alt']) ? $attribs['alt'] : null;
-		$thumb = $tim->thumb($this->get(), null, null, false);
+		$thumb = $tim->thumb($this->getUrl(), null, null, false);
 		
 		if( $url )
 			return $thumb;

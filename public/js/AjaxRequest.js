@@ -14,11 +14,10 @@ var AjaxRequest = function(){
 	var loaderImageId	= 'ajax-request-loader';
 	var $loader;
 	
-	var method 			= METHOD_POST;
-	var responseType 	= 'json';
-	var baseAjaxUrl 	= '';
-	var params 			= {};
-	var url 			= null;
+	var method = METHOD_POST;
+	var baseAjaxUrl = '';
+	var url = null;
+	var params = {};
 		
 	var addParam = function(name, value){
 		if(name && value)
@@ -29,10 +28,6 @@ var AjaxRequest = function(){
 	
 	var setBaseUrl = function(url){
 		baseAjaxUrl = url;
-	};
-	
-	var setResponseType = function(type){
-		responseType = type;
 	};
 	
 	var post = function(){
@@ -151,7 +146,7 @@ var AjaxRequest = function(){
 		
 		$.ajax(baseAjaxUrl+url, {
 			method: method,
-			dataType: responseType,
+			dataType: 'json',
 			data: params,
 			complete: function(jqXHR, textStatus){
 				var response;

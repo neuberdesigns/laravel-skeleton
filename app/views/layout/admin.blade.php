@@ -20,7 +20,7 @@
 	<!-- iCheck -->
 	{{HTML::style('/plugins/iCheck/flat/blue.css')}}
 	<!-- Morris chart -->
-	{{HTML::style('/plugins/morris/morris.css')}}
+	{{--HTML::style('/plugins/morris/morris.css')--}}
 	<!-- jvectormap -->
 	{{HTML::style('/plugins/jvectormap/jquery-jvectormap-1.2.2.css')}}
 	<!-- Date Picker -->
@@ -30,7 +30,7 @@
 	<!-- bootstrap wysihtml5 - text editor -->
 	{{HTML::style('/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css')}}
 	<!-- bootstrap data tables - text editor -->
-	
+	{{HTML::style('/bootstrap/css/dataTables.bootstrap.css')}}
 	{{-- HTML::script('js/jquery.min.js') --}}
 	@yield('css')
 	
@@ -50,7 +50,7 @@
 		@section('header')
 		<header class="main-header">
 			<!-- Logo -->
-			<a href="{{BaseAdminController::urlTo('admin', null)}}" class="logo">
+			<a href="{{URL::to('/admin/dashboard')}}" class="logo">
 				<!-- mini logo for sidebar mini 50x50 pixels -->
 				<span class="logo-mini"></span>
 				<!-- logo for regular state and mobile devices -->
@@ -67,7 +67,7 @@
 					<ul class="nav navbar-nav">
 						
 						<li class="user user-menu">
-							{{HTML::link('admin/logout', 'Sair', array('class'=>'btn btn-danger btn-flat'))}}
+							{{HTML::link('admin/sair', 'Sair', array('class'=>'btn btn-danger btn-flat'))}}
 						</li>
 					</ul>
 				</div>
@@ -90,14 +90,16 @@
 		@show
   		
   		<!-- Content Wrapper. Contains page content -->
-		<div class="content-wrapper">
+		<div class="{{$isLoginPage?'content':'content-wrapper'}}">
+			@if(!$isLoginPage)
 			<section class="content-header">
-				<h1>{{$pageMainTitle or ''}}</h1>
+				<h1>{{$controllerTitle or ''}}</h1>
 				<ol class="breadcrumb hide">
 					<li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
 					<li class="active">Dashboard</li>
 				</ol>
 			</section>
+			@endif
 			
 	  		<!-- Main content -->
 			<section class="content">
@@ -128,8 +130,8 @@
 	{{HTML::script('/bootstrap/js/bootstrap.min.js')}}
 
 	<!-- Morris.js charts -->
-	{{HTML::script('/plugins/morris/raphael-min.js')}}
-	{{HTML::script('/plugins/morris/morris.min.js')}}
+	{{--HTML::script('/plugins/morris/raphael-min.js')--}}
+	{{--HTML::script('/plugins/morris/morris.min.js')--}}
 
 	<!-- Sparkline -->
 	{{HTML::script('/plugins/sparkline/jquery.sparkline.min.js')}}
@@ -161,7 +163,7 @@
 	{{HTML::script('/dist/js/app.min.js')}}
 
 	<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-	{{HTML::script('/dist/js/pages/dashboard.js')}}
+	{{--HTML::script('/dist/js/pages/dashboard.js')--}}
 
 	<!-- AdminLTE for demo purposes -->
 	{{HTML::script('/js/tinymce/tinymce.min.js')}}

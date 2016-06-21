@@ -8,32 +8,21 @@ abstract class InputBuilderAbstract {
 	protected $selectedItem;
 	protected $isChecked 			= false;
 	protected $value 				= 'on';
-	protected $size 				= 4;
+	protected $size 				= 12;
 	protected $list 				= array();
 	protected $fieldAttributes 		= array();
 	protected $labelAttributes 		= array();
 	
 	protected abstract function buildInputElement();
 	
-	public function __construct(){
+	public function __construct($type=null){
+		$this->type = $type;
 		$this->fieldAttributes = array('class'=>'form-control');
-		$this->labelAttributes = array('class'=>'col-xs-2 col-md-2 control-label');
-	}
-	
-	//build the entire element, wrapers, label and input
-	public function build(){
-		$this->html = '';
-		$this->html .= '<div class="form-group">';
-		$this->html .= 	$this->buildLabelElement();
-		$this->html .= '	<div class="col-xs-'.$this->getSize().' col-md-'.$this->getSize().'">';
-		$this->html .= '		'.$this->buildInputElement();
-		$this->html .= '	</div>';
-		$this->html .= '</div>';
-		
-		return $this->getHtml();
+		$this->labelAttributes = array('class'=>'');
 	}
 	
 	//Setters / Config
+	
 	public function name($name, $displayName=null){
 		$this->name = $name;
 		$this->displayName = ucwords(str_replace('_', ' ', snake_case($displayName)));
@@ -76,18 +65,12 @@ abstract class InputBuilderAbstract {
 	}
 	
 	public function addClass($class){
-		$this->addFieldAttr('class', $class);
+		$this->fieldAttributes['class'] = $class;
 		return $this;
 	}
 	
 	public function placeholder($text){
-		$this->addFieldAttr('placeholder', $text);
-		return $this;
-	}
-	
-	public function id($id){
-		$this->addLabelAttr('for', $id);
-		$this->addFieldAttr('id', $id);
+		$this->fieldAttributes['placeholder'] = $text;
 		return $this;
 	}
 	
@@ -115,6 +98,15 @@ abstract class InputBuilderAbstract {
 	 */
 	protected function getHtml(){
 		return $this->html;
+	}
+
+	/**
+	 * Gets the value of type.
+	 *
+	 * @return mixed
+	 */
+	public function getType(){
+		return $this->type;
 	}
 
 	/**
@@ -210,5 +202,25 @@ abstract class InputBuilderAbstract {
 	//Build the label
 	protected function buildLabelElement(){
 		return Form::label($this->getDisplayName(), $this->getLabel(), $this->getLabelAttributes());
-	}	
+	}
+	
+	//build the entire element, wrapers, label and input
+	public function build(){
+		$this->html = PHP_EOL;
+		$this->html .= "\t\t\t\t".'<div class="col-sm-'.$this->getSize().'">'.PHP_EOL;
+		$this->html .= "\t\t\t\t\t".'<div class="form-group">'.PHP_EOL;
+		$this->html .= "\t\t\t\t\t\t".$this->buildLabelElement().PHP_EOL;
+		
+		if($this->getType()=='checkbox'){
+			$this->html .= "\t\t\t\t\t\t".'<br>'.PHP_EOL;
+		}
+			$this->html .= "\t\t\t\t\t\t".$this->buildInputElement().PHP_EOL;
+		
+		$this->html .= "\t\t\t\t\t".'</div>'.PHP_EOL;
+		$this->html .= "\t\t\t\t".'</div>'.PHP_EOL;
+		
+		return $this->getHtml();
+	}
+
+	
 }

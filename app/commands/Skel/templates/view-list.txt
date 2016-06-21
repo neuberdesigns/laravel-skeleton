@@ -16,20 +16,22 @@
 				<div class="col-sm-6">
 					<div class="dataTables_length">
 						<label>Exibir
-							<select name="example1_length" aria-controls="example1" class="form-control input-sm">
-								<option value="10">10</option>
-								<option value="25">25</option>
-								<option value="50">50</option>
-								<option value="100">100</option>
+							<select id="pagination-itens-perpage" aria-controls="" class="form-control input-sm">
+								<option value="10"	{{$perpage==10?'selected':''}}>10</option>
+								<option value="25"	{{$perpage==25?'selected':''}}>25</option>
+								<option value="50"	{{$perpage==50?'selected':''}}>50</option>
+								<option value="100"	{{$perpage==100?'selected':''}}>100</option>
 							</select> itens
 						</label>
 					</div>
 				</div>
 				<div class="col-sm-6">
 					<div id="example1_filter" class="dataTables_filter">
-						<label>Busca:
-							<input type="search" class="form-control input-sm" placeholder="" aria-controls="example1">
-						</label>
+						{{Form::open(array('method'=>'get', 'url'=>BaseAdminController::urlToSearch($controllerSegment)))}}
+							<label>Busca:
+								{{Form::input('search', 'term', Input::get('term'), array('class'=>'form-control input-sm', 'aria-controls'=>'search'))}}
+							</label>
+						{{Form::close()}}
 					</div>
 				</div>
 			</div>
@@ -40,17 +42,6 @@
 						{fieldsList}						<th></th>
 					</tr>
 				</thead>
-				<tbody>
-					@foreach( $list as $k=>$row )
-					<tr>
-						{fieldsName}
-						<td>
-							@include('admin/partial/list-actions')
-						</td>
-					</tr>
-					@endforeach
-				</tbody>
-				
 				<tbody>
 				@if(empty($list))
 					<tr>
@@ -78,7 +69,9 @@
 		<div class="box-footer">
 			<div class="row">
 				<div class="col-sm-5">
-					<!-- <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">Exibindo de <b>1 a 10</b> de 57 registros</div> -->
+					<div class="dataTables_info" role="status" aria-live="polite">
+						Exibindo de <b>{{$paginator->getFrom()}} a {{$paginator->getTo()}}</b> de {{$paginator->getTotal()}} registros
+					</div>
 				</div>
 				<div class="col-sm-7">
 					<div class="dataTables_paginate paging_simple_numbers" id="example2_paginate">
