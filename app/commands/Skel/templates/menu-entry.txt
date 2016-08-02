@@ -1,5 +1,5 @@
-	<li class="treeview">
+	<li class="treeview {{BaseAdminController::isActive('{seg}')}}">
 		<a href="{{BaseAdminController::urlToIndex('{seg}')}}">
-			<i class=""></i> <span>{title}</span></i>
+			<i class="fa "></i> <span>{{trans('project.{seg}')}}</span></i>
 		</a>
 	</li>

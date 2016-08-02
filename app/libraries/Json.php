@@ -1,13 +1,10 @@
 <?php
 
 class Json {
+	protected $status = 400;
 	private $properties = array();
 	
 	public function __construct(){
-		$this->add('response', 'Calix');
-		$this->add('msgType', 'error');
-		$this->add('status', 400);
-		$this->add('autoclear', true);
 	}
 	
 	public function __get($prop){
@@ -22,69 +19,52 @@ class Json {
 			$this->properties[$prop] = $value;
 	}
 	
-	public function setSuccess($response=null){
-		$this->msgType = 'success';
-		$this->status = 200;
-		$this->response = $response;
+	public function success($status=200){
+		$this->status = $status;
+		return $this;
 	}
 	
-	public function setFail($response=null){
-		$this->msgType = 'error';
-		$this->status = 400;
-		$this->response = $response;
+	public function fail($errors=null, $status=400, $formErrorFormat=false){
+		$this->status = $status;
+		if(!empty($errors)){
+			if(is_array($errors))
+				$this->add('errors', $errors);
+			else
+				if($formErrorFormat)
+					$this->add('errors', array('default'=>array($errors)));
+				else
+					$this->add('errors', array($errors));
+		}
+		
+		return $this;
 	}
 	
-	protected function getProperties(){
+	public function getProperties(){
 		return $this->properties;
 	}
 	
-	protected function setProperties($props){
+	public function setProperties($props){
 		$this->properties = $props;
+		return $this;
 	}
 	
-	protected function check($prop){
+	public function check($prop){
 		return array_key_exists($prop, $this->getProperties());
 	}
 	
 	public function add($prop, $value){
 		if( !$this->check($prop) ){
 			$this->properties[$prop] = $value;
-			return true;
-		}else{
-			return false;
-		}
+		}		
+		return $this;
 	}
 	
-	public function addBatch($properties){
-		foreach( $properties as $prop=>$val ){
-			$this->add($prop, $val);
-		}
-	}
-	
-	public function getJson(){
-		return json_encode($this->getProperties());
-	}
-	
-	public function make(){
-		return Response::make($this->getJson(), $this->status);
-		//return Response::json($this->getProperties(), $this->status);
-	}
-	
-	public function makeJson(){
-		//return Response::make($this->getJson(), $this->status);
-		return Response::json( $this->getProperties() );
-	}
-	
-	/**
-	 * Import a json string,, all previous properties will be lost
-	 * @param  string $json A json string
-	 * @return void
-	 */
-	public function import($json){
-		$this->setProperties( json_decode($json, true) );
+	public function finish(){
+		return Response::make($this->getProperties(), $this->status);
 	}
 	
 	public function __toString(){
-		return $this->getJson();
+		//return json_encode($this->getProperties());
+		return $this->finish();
 	}
 }

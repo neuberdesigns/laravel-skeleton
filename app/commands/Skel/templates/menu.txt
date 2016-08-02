@@ -1,8 +1,8 @@
 <ul class="sidebar-menu">
-	<li class="header">MENU PRINCIPAL</li>
-	<li class="treeview">
+	<li class="header">{{trans('admin.menu')}}</li>
+	<li class="treeview {{BaseAdminController::isActive('admin')}}">
 		<a href="{{BaseAdminController::urlToIndex('admin')}}">
-			<i class="fa fa-first-order"></i> <span>Admin</span></i>
+			<i class="fa fa-user-plus"></i> <span>{{trans('admin.admin')}}</span></i>
 		</a>
 	</li>
 	

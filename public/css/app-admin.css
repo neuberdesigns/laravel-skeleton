@@ -1,0 +1,37 @@
+textarea { resize: none }
+
+ul { 
+	list-style: none;
+	margin: 0;
+}
+
+
+.caret-top { 
+	border-top: 0px solid currentColor;
+	border-right: 4px solid transparent;
+	border-bottom: 4px solid currentColor;
+	border-left: 4px solid transparent;
+}
+
+.status-icon {
+	background: #CCC;
+	width: 20px;
+	height: 20px;
+	display: block;
+	border-radius: 100px;
+	margin: auto;
+}
+
+.status-icon-active, .status-icon-1 {
+	background: #0C0;
+}
+
+.status-icon-inactive, .status-icon-0 {
+	background: #C00;
+}
+
+.ui-state-highlight { 
+  height: 50px;
+  line-height: 1.2em;
+  border: 2px dashed #DD9939;
+}

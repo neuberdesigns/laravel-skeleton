@@ -6,8 +6,10 @@ abstract class InputBuilderAbstract {
 	protected $displayName;
 	protected $label;
 	protected $selectedItem;
+	protected $toogleOn;
+	protected $toogleOff;
 	protected $isChecked 			= false;
-	protected $value 				= 'on';
+	protected $value 				= null;
 	protected $size 				= 12;
 	protected $list 				= array();
 	protected $fieldAttributes 		= array();
@@ -49,28 +51,22 @@ abstract class InputBuilderAbstract {
 		return $this;
 	}
 	
-	public function checked($isChecked){
-		$this->isChecked = $isChecked;
+	public function addFieldAttr($attr, $value=null){
+		if(is_string($attr)){
+			$this->fieldAttributes[$attr] = $value;
+		}else if(is_array($attr)){
+			foreach($attr as $attribute=>$value){
+				$this->addFieldAttr($attribute, $value);
+			}
+		}
+		
 		return $this;
 	}
 	
-	public function selected($item){
-		$this->selectedItem = $item;
-		return $this;
-	}
-	
-	public function addFieldAttr($attr, $value){
-		$this->fieldAttributes[$attr] = $value;
-		return $this;
-	}
-	
-	public function addClass($class){
-		$this->fieldAttributes['class'] = $class;
-		return $this;
-	}
-	
-	public function placeholder($text){
-		$this->fieldAttributes['placeholder'] = $text;
+	public function removeFieldAttr($attr){
+		if( isset($this->fieldAttributes[$attr]) ){
+			unset($this->fieldAttributes[$attr]);
+		}
 		return $this;
 	}
 	
@@ -89,6 +85,58 @@ abstract class InputBuilderAbstract {
 		return $this;
 	}
 	
+	//Field Parameters
+	public function addClass($class){
+		$this->fieldAttributes['class'] .= ' '.$class;
+		return $this;
+	}
+	
+	public function mask($value, $isAlias=true){
+		$this->addFieldAttr('data-inputmask', "'".($isAlias?'alias':'mask')."':'".$value."'");
+		return $this;
+	}
+	
+	public function placeholder($text){
+		$this->addFieldAttr('placeholder', $text);
+		return $this;
+	}
+	
+	public function id($id){
+		$this->addFieldAttr('id', $id);
+		return $this;
+	}
+	
+	public function disabled(){
+		$this->addFieldAttr('disabled', 'true');
+		return $this;
+	}
+	
+	public function readOnly(){
+		$this->addFieldAttr('readonly', 'true');
+		return $this;
+	}
+	
+	public function checked($isChecked){
+		$this->isChecked = $isChecked;
+		return $this;
+	}
+	
+	public function selected($item){
+		$this->selectedItem = $item;
+		return $this;
+	}
+	
+	public function cols($size=null){
+		$this->addFieldAttr('cols', $size);
+	}
+	
+	public function rows($size=null){
+		$this->addFieldAttr('rows', $size);
+	}
+	
+	public function toogleLabels($on, $off){
+		$this->addFieldAttr('rows', $size);
+	}
 	
 	//Getters
 	/**

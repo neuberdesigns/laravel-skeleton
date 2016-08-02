@@ -19,7 +19,7 @@ tinyMCE.init({
 	toolbar1				: 'bold,italic,strikethrough,|,bullist,numlist,|,blockquote,|,alignleft,aligncenter,alignright,|,|,superscript,subscript,|,link,unlink,anchor,|,searchreplace,|,preview,|,fullscreen',
 	toolbar2				: 'fontsizeselect,|,underline,|,alignjustify,|,|,forecolor,backcolor,|,charmap,|,outdent,indent,|,undo,redo,|,hr,|,image,|,media,|,print',
 	
-	external_filemanager_path:baseUrl+"scripts/tinymce/plugins/responsivefilemanager/filemanager/",
+	external_filemanager_path:baseUrl+"plugins/tinymce/plugins/responsivefilemanager/filemanager/",
 	external_plugins: { "filemanager" : "plugins/responsivefilemanager/filemanager/plugin.min.js"},
 	
 	filemanager_title: "Gerenciador de imagens",

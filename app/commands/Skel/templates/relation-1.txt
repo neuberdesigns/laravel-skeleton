@@ -1,4 +1,0 @@
-	
-	public function {relation_name}(){
-		return $this->hasOne('{relation_table}');
-	}

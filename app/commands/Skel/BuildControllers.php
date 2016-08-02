@@ -75,6 +75,10 @@ class BuildControllers extends AbstractSkel {
 			file_put_contents($modelPath, $template);
 			$this->info('created controller "'.$controllerName.'"');
 		}
+		
+		$this->info('generating autoload');
+		Artisan::call('dump-autoload');
+		$this->info('done');
 	}
 
 	/**

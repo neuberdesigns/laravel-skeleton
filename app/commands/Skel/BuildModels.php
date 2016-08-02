@@ -75,6 +75,10 @@ class BuildModels extends AbstractSkel {
 			$this->info('created model "'.$modelName.'" with table "'.$tableName.'"');
 			$relationsStr = '';
 		}
+		
+		$this->info('generating autoload');
+		Artisan::call('dump-autoload');
+		$this->info('done');
 	}
 
 	/**

@@ -102,6 +102,12 @@ return array(
 	|
 	*/
 
-	'attributes' => array(),
+	'attributes' => array(
+		'name'=>'name',
+		'email'=>'email',
+		'company'=>'company',
+		'message'=>'message',
+		'g-recaptcha-response'=>'Captcha',
+	),
 
 );

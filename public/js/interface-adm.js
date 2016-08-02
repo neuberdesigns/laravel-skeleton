@@ -2,16 +2,69 @@ $('document').ready(function(){
 	var ajaxRequest = AjaxRequest();
 	ajaxRequest.setBaseUrl(baseUrlAdmin);
 	
-	var placeholder = {placeholder:'_'};
-	$('.mask-datetime').mask('99/99/9999 99:99', placeholder);
-	$('.mask-date').mask('99/99/9999', placeholder);
-	$('.mask-phone').mask('9999-9999?9', placeholder);
-	$('.mask-phonearea').mask('(99) 9999-9999?9', placeholder);
-	$('.mask-zip-br').mask('99999-999', placeholder);
+	if( $.inputmask ){
+		var placeholder = '_';
+		$.inputmask.defaults.aliases.datetime = {mask: '99/99/9999 99:99', placeholder: placeholder}
+		$.inputmask.defaults.aliases.date = {mask: '99/99/9999', placeholder: placeholder}
+		$.inputmask.defaults.aliases.phone = {mask: '99999-9999', placeholder: placeholder}
+		$.inputmask.defaults.aliases.phonearea = {mask: '(99) 99999-9999', placeholder: placeholder}
+		$.inputmask.defaults.aliases.zip = {mask: '99999-999', placeholder: placeholder}
+		$.inputmask.defaults.aliases.phone_cc_br = {mask: '+99 (99) 99999-9999', placeholder: placeholder}
+		$.inputmask.defaults.aliases.phone_cc_en = {mask: '+99 99 999 9999-9[9]', placeholder: placeholder}
+		
+		$('.mask-datetime').inputmask('datetime');
+		$('.mask-date').inputmask('date');
+		$('.mask-zip-br').inputmask('zip');
+		$('.mask-phone').inputmask('phone');
+		$('.mask-phonearea').inputmask('phonearea');
+		$('.mask-phone-cc-br').inputmask('phone_cc_br');
+		$('.mask-phone-cc-en').inputmask('phone_cc_en');
+		
+		//$(':input').inputmask();
+	}
 	
-	if( $('.sortable').length>0 ){
+	if(jQuery.ui && $('.sortable').length>0 ){
 		$('.sortable').sortable();
 	}
+	
+	if(jQuery.ui && $('.inlist-sortable').length>0){
+		var $inlistSortable = $( ".inlist-sortable" ).sortable({
+			placeholder: "ui-state-highlight",
+			forcePlaceholderSize: true,
+			disabled: true,
+			update: function(event, ui){
+				var data = {
+					order: $inlistSortable.sortable('toArray', {attribute:'data-sortable-id'}),
+				}
+				ajaxRequest.endpoint(getController()+'/ajax-update-order').data(data).request();
+			}
+		});
+		
+		$('.inlist-sortable-toogle').on('mouseenter', function(){
+			$inlistSortable.sortable("enable");
+			$(this).css('cursor', 'move');
+		});
+		
+		$('.inlist-sortable-toogle').on('mouseleave', function(){
+			$inlistSortable.sortable("disable");
+			$(this).css('cursor', 'default');
+		});
+	}
+	
+	$('.bt-save-order').on('click', function(){
+		var order = [];
+		var post = {};
+		var segs = window.location.href.split('/');
+		var controllerName = segs[segs.length-2];
+		
+		$('.organize-itens li').each(function(){
+			order.push( $(this).attr('data-id') );
+		});
+		post = {'list':order};
+		
+		console.log(post, order);
+		ajaxRequest.endpoint(controllerName+'/ajax-organize').data(post).request();
+	});
 	
 	$('#pagination-itens-perpage').on('change', function(){
 		var qs = location.search;
@@ -41,21 +94,6 @@ $('document').ready(function(){
 		if(!remove){
 			e.preventDefault();
 		}
-	});
-	
-	$('.bt-save-order').on('click', function(){
-		var order = [];
-		var post = {};
-		var segs = window.location.href.split('/');
-		var controllerName = segs[segs.length-2];
-		
-		$('.organize-itens li').each(function(){
-			order.push( $(this).attr('data-id') );
-		});
-		post = {'list':order};
-		
-		console.log(post, order);
-		ajaxRequest.endpoint(controllerName+'/ajax-organize').data(post).request();
 	});
 	
 	$('.bt-seo-save').on('click', function(){
@@ -108,12 +146,11 @@ $('document').ready(function(){
 				'field': $(this).attr('data-field'),
 			}
 			ajaxRequest.endpoint(getSegment(3)+'/ajax-delete-image').data(post).request().then(function(r){
-				console.log(r, $self);
-				if( r.status==200 ){
-					$self.closest('.preview-image').css('background', '#F00').fadeOut(900, function(){
-						$(this).remove();
-					});
-				}
+				$self.closest('.preview-image').css('background', '#dd4b39').fadeOut(900, function(){
+					$(this).remove();
+				});
+			}, function(errors){
+				alert(jsonErrorsToList(errors).join("\n"));
 			});
 		});
 	}
@@ -142,7 +179,50 @@ function getSegment(backIndex){
 		backIndex = 2;
 	
 	var segs = window.location.href.split('/');
-	var controller = segs[(segs.length) - (backIndex)];
+	var admIndex = segs.indexOf('admin');
+	//var controller = segs[(segs.length) - (backIndex)];
+	var controller = segs[admIndex+1];
 	
 	return controller;
+}
+
+function getController(addIndex){
+	if( typeof(addIndex)=='undefined')
+		addIndex = 1;
+	
+	var segs = stripQueryString(window.location.href).split('/');
+	var admIndex = segs.indexOf('admin');
+	var controller = segs[(admIndex+addIndex)];
+	
+	return controller;
+}
+
+function stripQueryString(url){
+	var questionMarkPos = url.indexOf('?');
+	var ampersandPos = url.indexOf('&');
+	var index = null;
+	
+	if( (ampersandPos>-1) && ampersandPos < questionMarkPos )
+		index = ampersandPos;
+	else
+		index = questionMarkPos;
+	
+	if(index==-1)
+		index = url.length;
+	
+	return url.substr(0, index);
+}
+
+function jsonErrorsToList(){
+	var errorsList = [];
+	var errors = [];
+	for( var field in resp.errors ){
+		errors = resp.errors[field];
+		
+		for(var i in errors){
+			errorsList.push(errors[i]);
+		}
+	}
+	
+	return errorsList;
 }

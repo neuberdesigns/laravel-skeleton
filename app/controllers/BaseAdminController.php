@@ -1,11 +1,14 @@
 <?php
 abstract class BaseAdminController extends BaseController {
+	
 	protected $user;
 	protected $orderLink;
 	protected $controller;
 	protected $controllerTitle;
 	protected $model;
+	protected $orderField 		= 'position';
 	protected $searchField 		= 'name';
+	protected $slugSource 		= null;
 	protected $viewIndex 		= 'index';
 	protected $viewList 		= 'list';
 	protected $viewAdd 			= 'add';
@@ -15,7 +18,9 @@ abstract class BaseAdminController extends BaseController {
 	protected $except 			= array();
 	protected $aditionalData 	= array();
 	protected $belongsToUser 	= true;
+	protected $json;
 	
+	const SEARCH_PARAMETER_NAME = 'term';
 	const ACTION_HOME 	= 'index';
 	const ACTION_SAVE 	= 'save';
 	const ACTION_EDIT 	= 'editar';
@@ -27,8 +32,9 @@ abstract class BaseAdminController extends BaseController {
 	public function __construct(){
 		$this->start();
 		$this->orderLink = new OrderLink();
-		$isLoginPage = Request::is('admin/login');
-		View::share('isLoginPage', $isLoginPage );
+		$this->json = new Json();
+		
+		View::share('isLoginPage', Request::is('admin/login') );
 		View::share('controllerSegment', $this->controller);
 		View::share('controllerTitle', $this->controllerTitle);
 	}
@@ -38,60 +44,49 @@ abstract class BaseAdminController extends BaseController {
 	protected function hookAfterSave($model){}
 	
 	public function anyIndex($id=null){
-		return $this->home($id);
+		return $this->handler($id);
 	}
 	
 	public function getBusca(){
-		return $this->home(null, null, true);
+		return $this->handler(null, null, true);
 	}
 	
 	public function anyEditar($id=null){
-		return $this->home($id);
+		return $this->handler($id);
 	}
 	
 	public function postSave($id=null){
-		return $this->home($id);
+		return $this->handler($id);
 	}
 	
 	public function getRemover($id=null){
 		return $this->remove($id);
 	}
 	
-	/*protected function route($id, $action=null){
-		$response = null;
-		if( $action==self::ACTION_NEW || $action==self::ACTION_EDIT ){
-			if( Request::isMethod('post') ){
-				$response = $this->save($id);
-			}else{
-				$response = $this->add($id, $action==self::ACTION_NEW);
-			}
-			
-		}else if( $action==self::ACTION_DELETE ){
-			$response = $this->remove($id);
-		
-		}else if( $action==self::ACTION_LIST){
-			$response = $this->getList(false);
-		
-		}else if( $action==self::ACTION_SEARCH){
-			$response = $this->getList(true);
-		}else{
-			$response = $this->home(true);
+	public static function getLangs(){
+		if(is_null(self::$langs)){
+			self::$langs = MdLang::all();
 		}
 		
-		return $response;
-	}*/
+		return self::$langs;
+	}
 	
-	protected function home($id=null, $isNew=false, $isSearch=false){
+	protected function handler($id=null, $isNew=false, $isSearch=false){
 		if( Request::isMethod('post') ){
 			return $this->save($id);
 		}else{
-			$data = array('controller'=>$this->controller, 'perpage'=>$this->orderLink->perpage);
+			$langs = BaseAdminController::getLangs();
+			$data = array(
+				'controller'=>$this->controller,
+				'perpage'=>$this->orderLink->perpage,
+			);
+			
 			$dataForAdd 	= $this->add($id, $isNew);
 			$dataForList 	= $this->getList($isSearch);
 			
 			$mergedData 	= array_merge($data, $dataForAdd, $dataForList);
-			//var_dump($this->controller);exit;
-			return View::make('admin.'.$this->controller.'.'.$this->viewIndex, $mergedData );
+			//var_dump($mergedData);exit;
+			return View::make($this->getViewPath(), $mergedData );
 		}
 	}
 	
@@ -140,6 +135,7 @@ abstract class BaseAdminController extends BaseController {
 	
 	protected function save($id){
 		$isNew = true;
+		
 		$validator = Validator::make(Input::all(), $this->rules );
 		if( $validator->passes() ){
 			if( !empty($id) ){
@@ -154,29 +150,26 @@ abstract class BaseAdminController extends BaseController {
 			
 			$files = array();
 			foreach($this->uploads as $uploadFieldName){
-				$upload = FileUpload::make()->field($uploadFieldName)->destination(FileUpload::DESTINATION_TEMP)->receive();
-				if($upload->isUploaded()){
-					$files[] = $upload;
-				}else{
-					var_dump($upload->getError()->getMEssage());
-					exit;
+				if(Input::hasFile($uploadFieldName)){
+					$upload = FileUpload::make()->field($uploadFieldName)->destination(FileUpload::DESTINATION_TEMP)->receive();
+					if($upload->isUploaded()){
+						$files[] = $upload;
+					}
 				}
 			}
 			
 			if( !empty($this->model) ){
 				$this->deleteOldUploads($files);
 			}
-			$this->model->fill( Input::except($this->except) );
+			$this->model->fill(Input::except($this->except));
 			
 			$this->moveUploads($files);
-			
-			
 			$this->hookBeforeSave($this->model);
 			if( $this->model->save() ){
 				$this->hookAfterSave($this->model);
-				Session::flash('save_success', 'Salvo com sucesso');
+				Session::flash('save_success', trans('admin.save_success'));
 			}else{
-				Session::flash('save_fail', 'Ops! Ocorreu um erro ao salvar');
+				Session::flash('save_fail', trans('admin.save_fail'));
 			}
 			
 			return Redirect::to(self::urlToEdit($this->controller, $this->model->getKey()));
@@ -186,10 +179,15 @@ abstract class BaseAdminController extends BaseController {
 		}
 	}
 	
+	protected function getViewPath(){
+		return 'admin.'.$this->controller.'.'.$this->viewIndex;
+	}
+	
 	protected function remove($id){
 		$row = $this->model->find($id);
 		
 		if( !empty($row) ){
+			$this->deleteUploads($row);
 			$row->delete();
 		}
 		
@@ -209,7 +207,7 @@ abstract class BaseAdminController extends BaseController {
 	protected function fetchSearch(){
 		$term = $this->orderLink->term;
 		//$this->model = $this->model->where('name', 'like', "%$term%");
-		$model = $this->model->where($this->searchField, 'like', "%$term%");
+		$model = $this->addSearchParam($this->model, self::SEARCH_PARAMETER_NAME, 'like', $this->searchField);
 		
 		return $model;
 	}
@@ -245,6 +243,10 @@ abstract class BaseAdminController extends BaseController {
 		return $list;
 	}
 	
+	public static function isActive($segment){
+		return Request::is("admin/$segment*") ? 'active' : '';
+	}
+	
 	protected function deleteOldUploads($files){
 		if( !empty($this->model) ){
 			if( !empty($files) ){
@@ -258,20 +260,47 @@ abstract class BaseAdminController extends BaseController {
 		}
 	}
 	
+	protected function deleteUploads($modelRow){
+		if( !empty($modelRow) ){
+			foreach( $this->uploads as $field ){
+				if( !empty($modelRow->$field) ){
+					FileUpload::make($modelRow->$field)->delete();
+					$modelRow->$field = null;
+				}
+			}
+		}
+	}
+	
 	protected function moveUploads($uploads){
 		foreach($uploads as $upload) {
 			$fieldName = $upload->getFieldName();
-			$upload->move();
+			$moved = $upload->move();
 			$this->model->$fieldName = $upload->getUploadedName();
 		}
 	}
 	
-	/* ---------------------------------------- */
+	protected function toggleField($model, $field, $valueOn=1, $valueOff=0){
+		ini_set('html_errors', 'off');
+		if( Request::ajax() ){
+			if(!empty($model)){
+				if(isset($model->$field)){
+					$model->$field = $model->$field==$valueOn ? $valueOff : $valueOn;
+					$model->save();
+					$this->json->success();
+				}else{
+					$this->json->fail(trans('admin.field_could_not_update'));
+				}
+			}else{
+				$this->json->fail(trans('admin.entry_not_found'));
+			}
+		}
+				
+		return $this->json->finish();
+	}
 	
+	/* ---------------------------------------- */
 	public function postAjaxDeleteImage(){
 		ini_set('html_errors', 'off');
-		$json = new Json();
-		
 		$id = (int)Input::get('id');
 		$field = (string)Input::get('field');
 		
@@ -281,15 +310,27 @@ abstract class BaseAdminController extends BaseController {
 			FileUpload::make($row->$field)->delete();
 			$row->$field = null;
 			$row->save();
-			$json->setSuccess('Imagem removida');
+			$this->json->success();
 		}else{
-			$json->setFail('A imagem não foi removida');
+			$this->json->fail(trans('admin.image_was_not_removed'));
 		}
 		
-		echo $json;
-		exit;
+		return $this->json->finish();
 	}
 	
+	public function postAjaxUpdateOrder(){
+		if(Request::ajax()){
+			$list = Input::get('order');
+			foreach($list as $position=>$key){
+				$this->model->where('id', '=', $key)->update( array($this->orderField => $position) );
+			}
+			$this->json->success();
+		}else{
+			$this->json->fail('Request is not an ajax');
+		}
+		
+		return $this->json->finish();
+	}
 	
 	/* ---------------------------------------- */
 	public static function urlTo($controller, $action=null, $id=null, $keepQueryString=true){

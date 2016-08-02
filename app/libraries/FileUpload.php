@@ -78,6 +78,11 @@ class FileUpload {
 		return !empty($this->error);
 	}
 	
+	public function exists(){
+		$path = $this->getUploadPath(true);
+		return file_exists($path) && is_file($path);
+	}
+	
 	public function receive(){
 		if( Input::hasFile($this->fieldName) ){
 			$file = Input::file($this->fieldName);
@@ -96,6 +101,15 @@ class FileUpload {
 		}
 		
 		return $this;
+	}
+	
+	public static function thumbForList($filename){
+		$fu = self::make($filename);
+		if($fu->exists()){
+			return $fu->getTim(220, 100, 1, null, false);
+		}
+		
+		return trans('admin.no_upload');
 	}
 	
 	//TODO refactor to use class insted static things

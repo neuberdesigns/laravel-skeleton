@@ -1,0 +1,1 @@
+plugins/responsivefilemanager/filemanager/config/config.php
