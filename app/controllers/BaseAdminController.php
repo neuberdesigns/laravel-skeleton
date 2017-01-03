@@ -1,17 +1,16 @@
 <?php
 abstract class BaseAdminController extends BaseController {
-	
 	protected $user;
-	protected $orderLink;
 	protected $controller;
-	protected $controllerTitle;
 	protected $model;
-	protected $orderField 		= 'position';
-	protected $searchField 		= 'name';
-	protected $slugSource 		= null;
+	protected $orderLink;
+	protected $view;
 	protected $viewIndex 		= 'index';
 	protected $viewList 		= 'list';
 	protected $viewAdd 			= 'add';
+	protected $orderField 		= 'position';
+	protected $searchField 		= 'name';
+	protected $slugSource 		= null;
 	protected $createdAt		= 'criado_em';
 	protected $rules 			= array();
 	protected $uploads 			= array();
@@ -33,9 +32,9 @@ abstract class BaseAdminController extends BaseController {
 		$this->start();
 		$this->orderLink = new OrderLink();
 		$this->json = new Json();
-		
 		View::share('isLoginPage', Request::is('admin/login') );
 		View::share('controllerSegment', $this->controller);
+		View::share('viewSegment', $this->view);
 		View::share('controllerTitle', $this->controllerTitle);
 	}
 	
@@ -63,19 +62,10 @@ abstract class BaseAdminController extends BaseController {
 		return $this->remove($id);
 	}
 	
-	public static function getLangs(){
-		if(is_null(self::$langs)){
-			self::$langs = MdLang::all();
-		}
-		
-		return self::$langs;
-	}
-	
 	protected function handler($id=null, $isNew=false, $isSearch=false){
 		if( Request::isMethod('post') ){
 			return $this->save($id);
 		}else{
-			$langs = BaseAdminController::getLangs();
 			$data = array(
 				'controller'=>$this->controller,
 				'perpage'=>$this->orderLink->perpage,
@@ -175,12 +165,12 @@ abstract class BaseAdminController extends BaseController {
 			return Redirect::to(self::urlToEdit($this->controller, $this->model->getKey()));
 		}else{
 			Input::flash();
-			return Redirect::to( self::urlToIndex($this->controller) )->withErrors($validator);
+			return Redirect::to(self::urlToIndex($this->controller) )->withErrors($validator);
 		}
 	}
 	
 	protected function getViewPath(){
-		return 'admin.'.$this->controller.'.'.$this->viewIndex;
+		return 'admin.'.$this->view.'.'.$this->viewIndex;
 	}
 	
 	protected function remove($id){

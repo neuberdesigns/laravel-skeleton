@@ -16,6 +16,7 @@ class AbstractSkel extends Command {
 		return array(
 			array('table', 't', InputOption::VALUE_OPTIONAL, 'Run command for a single table', null),
 			array('segment', 's', InputOption::VALUE_OPTIONAL, 'Specify the controller segment', null),
+			array('skipautoload', 'na', InputOption::VALUE_OPTIONAL, 'To skip generation of composer autoload', null),
 		);
 	}
 	
@@ -33,6 +34,13 @@ class AbstractSkel extends Command {
 			foreach( $this->database->getTables() as $table){
 				$this->callFunc($methodname, $table);
 			}
+		}
+	}
+	
+	protected function generateAutoload(){
+		if(!$this->hasSkip()){
+			$this->info('generating autoload');
+			Artisan::call('dump-autoload');
 		}
 	}
 	
@@ -54,6 +62,14 @@ class AbstractSkel extends Command {
 	
 	protected function canUseSegment(){
 		return $this->hasTarget() && $this->hasSegment();
+	}
+	
+	protected function hasSkip(){
+		return !empty($this->option('skipautoload'));
+	}
+	
+	protected function getSkip(){
+		return $this->option('skipautoload');
 	}
 	
 	private function callFunc($method, $table){

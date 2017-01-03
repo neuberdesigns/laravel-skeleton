@@ -12,6 +12,7 @@
 */
 
 App::before(function($request){
+	define('SITE_NAME', 'My Site');
 	define('EMAIL_NAME', 'Receiver email name');
 	define('EMAIL_RECEIVER', 'receiver@domain.com');
 	define('EMAIL_SENDER', 'sender@domain.com');

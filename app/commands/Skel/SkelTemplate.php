@@ -41,6 +41,7 @@ class SkelTemplate {
 	
 	public function save($targetPath){
 		$this->destinationFile = $targetPath;
+		$this->replace();
 		file_put_contents($targetPath, $this->replacedText);
 		return $this;
 	}

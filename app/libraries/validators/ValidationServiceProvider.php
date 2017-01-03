@@ -7,7 +7,7 @@ class ValidationServiceProvider extends ServiceProvider {
   public function register(){}
   public function boot(){
     $this->app->validator->resolver(function($translator, $data, $rules, $messages){
-    	return new NdValidator($translator, $data, $rules, $messages);
+    	return new NoValidator($translator, $data, $rules, $messages);
     });
   }
  

@@ -1,13 +1,12 @@
 <?php
 class DashboardController extends BaseAdminController {
-	public function __construct(){
+	public function start(){
 		$this->model;
 		$this->searchField = null;
 		$this->controller = null;
 		$this->controllerTitle = null;
 		$this->uploads = array();
-		$this->rules = array();		
-		parent::__construct();
+		$this->rules = array();
 	}
 	
 	public function anyIndex($id=null){

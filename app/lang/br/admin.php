@@ -27,6 +27,8 @@ return array(
     'link_example'=>'http://seusite.com',
     'active'=>'Ativo',
     'inactive'=>'Inativo',
+    'new'=>'Novo',
+    'create'=>'Criar',
     
     'name'=>'Nome',
     'email'=>'E-Mail',

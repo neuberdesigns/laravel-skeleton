@@ -70,7 +70,7 @@ class BuildMenu extends Command {
 			}
 		}
 		
-		$menuTemplate->mark('entries', $entriesStr)->replace()->save($menuFile);
+		$menuTemplate->mark('entries', $entriesStr)->save($menuFile);
 		$this->info('done');
 	}
 

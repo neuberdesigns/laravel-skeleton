@@ -46,11 +46,14 @@ class All extends Command {
 	 * @return void
 	 */
 	public function fire(){
-		$target = $this->option('table');
-		$seg = $this->option('segment');
-		$this->call('skel:controller', array('-t' => $target, '-s'=>$seg));
-		$this->call('skel:model', array('-t' => $target, '-s'=>$seg));
-		$this->call('skel:view', array('-t' => $target, '-s'=>$seg));
+		$target 		= $this->option('table');
+		$seg 			= $this->option('segment');
+		$skipautoload 	= $this->option('skipautoload');
+		$data 			= array('-t' => $target, '-s'=>$seg, '-na'=>true);
+		
+		$this->call('skel:controller', $data);
+		$this->call('skel:model', $data);
+		$this->call('skel:view', $data);
 		
 		$this->info('generating autoload');
 		Artisan::call('dump-autoload');

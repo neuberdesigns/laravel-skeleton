@@ -19,7 +19,7 @@
 	{{HTML::style('/css/AdminLTE.min.css')}}
 	
 	<!-- AdminLTE Skins. Choose a skin from the css/skins folder instead of downloading all of them to reduce the load. -->
-	{{HTML::style('/css/skins/skin-black-light.min.css')}}
+	{{HTML::style('/css/skins/skin-blue.min.css')}}
 	
 	<!-- iCheck -->
 	{{-- HTML::style('/plugins/iCheck/flat/blue.css') --}}

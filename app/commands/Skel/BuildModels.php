@@ -58,9 +58,7 @@ class BuildModels extends AbstractSkel {
 		}
 		
 		$createFile = false;
-		$template = file_get_contents(__DIR__.'/templates/model.txt');
-		$template = str_replace(array('{model}', '{table}', '{primary}', '{timestamps}', '{relations}'), array($modelName, $tableName, $primary, $timestamps, $relationsStr), $template);
-		
+				
 		$modelPath = app_path().'/models/'.$modelName.'.php';
 		if( file_exists($modelPath) ){
 			if( $this->confirm('Model '.$modelName.'.php exists, replace it? [y|N] ', false) ){
@@ -71,13 +69,19 @@ class BuildModels extends AbstractSkel {
 		}
 		
 		if( $createFile ){
-			file_put_contents($modelPath, $template);
+			$template = new SkelTemplate('model');
+			$template
+					->mark('model', $modelName)
+					->mark('table', $tableName)
+					->mark('primary', $primary)
+					->mark('timestamps', $timestamps)
+					->mark('relations', $relationsStr)
+					->save($modelPath);
 			$this->info('created model "'.$modelName.'" with table "'.$tableName.'"');
 			$relationsStr = '';
 		}
 		
-		$this->info('generating autoload');
-		Artisan::call('dump-autoload');
+		$this->generateAutoload();
 		$this->info('done');
 	}
 

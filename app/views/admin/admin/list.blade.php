@@ -1,7 +1,7 @@
 	<!-- Default box -->
 	<div class="box">
 		<div class="box-header with-border">
-			<h3 class="box-title">Listagem</h3>
+			<h3 class="box-title">{{trans('admin.list')}}</h3>
 
 			<div class="box-tools pull-right">
 				<button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
@@ -14,48 +14,35 @@
 
 			<div class="row">
 				<div class="col-sm-6">
-					<div class="dataTables_length">
-						<label>Exibir
-							<select id="pagination-itens-perpage" aria-controls="" class="form-control input-sm">
-								<option value="10"	{{$perpage==10?'selected':''}}>10</option>
-								<option value="25"	{{$perpage==25?'selected':''}}>25</option>
-								<option value="50"	{{$perpage==50?'selected':''}}>50</option>
-								<option value="100"	{{$perpage==100?'selected':''}}>100</option>
-							</select> itens
-						</label>
-					</div>
+					@include('admin.partial.components.pagination-size-picker')
 				</div>
 				<div class="col-sm-6">
-					<div id="example1_filter" class="dataTables_filter">
-						{{Form::open(array('method'=>'get', 'url'=>BaseAdminController::urlToSearch($controllerSegment)))}}
-							<label>Busca:
-								{{Form::input('search', 'term', Input::get('term'), array('class'=>'form-control input-sm', 'aria-controls'=>'search'))}}
-							</label>
-						{{Form::close()}}
-					</div>
+					@include('admin.partial.components.search')
 				</div>
 			</div>
 
 			<table class="table table-bordered table-hover">
 				<thead>
 					<tr>
-						<th>{{OrderLink::make('Name', 'name')}}</th>
-						<th>{{OrderLink::make('Email', 'email')}}</th>
+						<th>{{OrderLink::make(trans('project.name'), 'name')}}</th>
+						<th>{{OrderLink::make(trans('project.email'), 'email')}}</th>
+						<th>{{OrderLink::make(trans('project.enabled'), 'enabled')}}</th>
 						<th></th>
 					</tr>
 				</thead>
 				<tbody>
 				@if(empty($list))
 					<tr>
-						<td colspan="99" class="text-left">Nenhum resultado foi encontrado</td>
+						<td colspan="99" class="text-left">{{trans('admin.no_results_available')}}</td>
 					</tr>
 				@else
 					@foreach( $list as $k=>$row )
 					<tr>
 						<td>{{$row->name}}</td>
 						<td>{{$row->email}}</td>
+						<td>{{$row->enabled}}</td>
 						<td>
-							@include('admin/partial/list-actions')
+							@include('admin.partial.components.list-actions')
 						</td>
 					</tr>
 					@endforeach
@@ -63,8 +50,9 @@
 				</tbody>
 				<tfoot>
 					<tr>
-						<th>{{OrderLink::make('Name', 'name')}}</th>
-						<th>{{OrderLink::make('Email', 'email')}}</th>
+						<th>{{OrderLink::make(trans('project.name'), 'name')}}</th>
+						<th>{{OrderLink::make(trans('project.email'), 'email')}}</th>
+						<th>{{OrderLink::make(trans('project.enabled'), 'enabled')}}</th>
 						<th></th>
 					</tr>
 				</tfoot>
@@ -75,7 +63,7 @@
 			<div class="row">
 				<div class="col-sm-5">
 					<div class="dataTables_info" role="status" aria-live="polite">
-						Exibindo de <b>{{$paginator->getFrom()}} a {{$paginator->getTo()}}</b> de {{$paginator->getTotal()}} registros
+						{{trans('admin.showing')}} <b>{{$paginator->getFrom()}} {{trans('admin.to')}} {{$paginator->getTo()}}</b> {{trans('admin.of')}} {{$paginator->getTotal()}} {{trans_choice('admin.entry', $paginator->getTotal())}}
 					</div>
 				</div>
 				<div class="col-sm-7">
@@ -88,3 +76,4 @@
 		<!-- /.box-footer-->
 	</div>
 	<!-- /.box -->
+

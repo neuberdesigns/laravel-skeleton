@@ -59,8 +59,8 @@ class BuildControllers extends AbstractSkel {
 		}
 		
 		$createFile = false;
-		$modelPath = app_path().'/controllers/admin/'.$controllerName.'Controller.php';
-		if( file_exists($modelPath) ){
+		$controllerPath = app_path().'/controllers/admin/'.$controllerName.'Controller.php';
+		if( file_exists($controllerPath) ){
 			if( $this->confirm('Controller '.$controllerName.'Controller.php exists, replace it? [y|N] ', false) ){
 				$createFile = true;
 			}
@@ -69,15 +69,16 @@ class BuildControllers extends AbstractSkel {
 		}
 		
 		if( $createFile ){
-			$template = file_get_contents(__DIR__.'/templates/controller.txt');
-			$template = str_replace(array('{controller}', '{controller_seg}', '{controller_title}'), array($controllerName, $controllerSeg, $controllerTitle), $template);
-		
-			file_put_contents($modelPath, $template);
+			$template = new SkelTemplate('controller');
+			$template
+				->mark('controller', $controllerName)
+				->mark('controller_seg', $controllerSeg)
+				->mark('controller_title', $controllerTitle)
+				->save($controllerPath);
 			$this->info('created controller "'.$controllerName.'"');
 		}
 		
-		$this->info('generating autoload');
-		Artisan::call('dump-autoload');
+		$this->generateAutoload();
 		$this->info('done');
 	}
 

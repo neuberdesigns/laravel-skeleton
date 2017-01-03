@@ -98,10 +98,10 @@ class BuildViews extends AbstractSkel {
 		}
 		
 		if( $createFile ){
-			$templateIndex = file_get_contents(__DIR__.'/templates/view-index.txt');
-			$templateAdd = file_get_contents(__DIR__.'/templates/view-add.txt');
-			$templateList = file_get_contents(__DIR__.'/templates/view-list.txt');
-			
+			$templateIndex 	= new SkelTemplate('view-index');
+			$templateAdd 	= new SkelTemplate('view-add');
+			$templateList 	= new SkelTemplate('view-list');
+						
 			$fieldsListStr = '';
 			$fieldsNameStr = '';
 			$fieldsFormStr = '';
@@ -115,11 +115,11 @@ class BuildViews extends AbstractSkel {
 				}
 				
 				$inputFactoryCommands = array();
-				$fieldsListStr .= "<th>{{OrderLink::make('".ucfirst($field->displayName)."', '$field->name')}}</th>".PHP_EOL;
+				$fieldsListStr .= "<th>{{OrderLink::make(trans('project.$field->name'), '$field->name')}}</th>".PHP_EOL;
 				$fieldsNameStr .= '<td>{{$row->'.$field->name.'}}</td>'.PHP_EOL;
 				
 				$inputFactoryCommands[] = "InputFactory::create('$field->type')";
-				$inputFactoryCommands[] = "->name('$field->name', '".$field->displayName."')";
+				$inputFactoryCommands[] = "->name('$field->name', trans('project.$field->name'))";
 				$inputFactoryCommands[] = "->size(".$field->size.")";
 				
 				if( $field->typeCheck->isStatus ){
@@ -139,13 +139,14 @@ class BuildViews extends AbstractSkel {
 				}
 			}
 						
-			$templateList = str_replace( array('{fieldsList}', '{fieldsName}'), array($fieldsListStr, $fieldsNameStr), $templateList);
-			$templateAdd = str_replace( '{fieldsForm}', $fieldsFormStr, $templateAdd);
-			$templateIndex = str_replace( '{dirName}', $dirName, $templateIndex);
+			$templateList->mark('fieldsList', $fieldsListStr)->mark('fieldsName', $fieldsNameStr);
+			$templateAdd->mark('fieldsForm', $fieldsFormStr);
+			$templateIndex->mark('dirName', $dirName);
 			
-			file_put_contents($viewPath.$dirName.'/index.blade.php', $templateIndex);
-			file_put_contents($viewPath.$dirName.'/add.blade.php', $templateAdd);
-			file_put_contents($viewPath.$dirName.'/list.blade.php', $templateList);
+			$templateIndex->save($viewPath.$dirName.'/index.blade.php');
+			$templateAdd->save($viewPath.$dirName.'/add.blade.php');
+			$templateList->save($viewPath.$dirName.'/list.blade.php');
+			
 			$this->info('created views in "'.$dirName.'"');
 		}
 	}

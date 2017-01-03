@@ -2,6 +2,7 @@
 class {controller}Controller extends BaseAdminController {
 	protected function start(){
 		$this->model = new {controller}();
+		$this->view = '{controller_seg}';
 		$this->controller = '{controller_seg}';
 		$this->controllerTitle = '{controller_title}';
 		$this->uploads = array();

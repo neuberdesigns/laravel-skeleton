@@ -5,6 +5,7 @@ class ContactForm {
 	protected $fileFields 	= array();
 	protected $msgSuccess 	= 'Enviado com sucesso';
 	protected $msgError 	= 'Erro ao enviar';
+	protected $errors;
 	
 	public function __construct($rules=array()){
 		foreach( $rules as $field=>$validation ){
@@ -12,6 +13,7 @@ class ContactForm {
 				$this->addRule($field, $validation);
 			}
 		}
+		$this->errors = new Illuminate\Support\MessageBag();
 	}
 	
 	public function addRule($field, $validation=null){		
@@ -24,7 +26,7 @@ class ContactForm {
 		}
 	}
 	
-	public function validate(&$errors=null){
+	public function validate(){
 		$rules = $this->rules;		
 		
 		$validator = Validator::make(Input::all(), $rules);
@@ -32,7 +34,7 @@ class ContactForm {
 		if( $validator->passes() ){
 			return true;
 		}else{
-			$errors = $validator->errors();
+			$this->errors = $validator->errors();
 			Input::flash();
 			return false;
 		}
@@ -49,17 +51,17 @@ class ContactForm {
 		
 		$data['fields'] = $fields;
 		$self = $this;
-		$send = Mail::send($view, $data, function($message) use ($to, $toName, $subject, $self, $from, $fromName){
+		$send = Mail::send($view, $data, function($message) use ($subject, $from, $fromName, $to, $toName, $self){
 			if( empty($from) )
-				$from = EMAIL_RECEIVER;
+				$from = EMAIL_SENDER;
 			
 			if( empty($fromName) )
 				$fromName = EMAIL_NAME;			
 			
 			$message->subject($subject);
-			$message->to($to, $toName);
 			$message->from($from, $fromName);
-			$message->replyTo($from, $fromName );
+			$message->to($to, $toName);
+			$message->replyTo($from, $fromName);
 			$message->returnPath(EMAIL_SENDER);
 			
 			if( $self->hasFile ){

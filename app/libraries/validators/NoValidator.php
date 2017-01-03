@@ -1,9 +1,9 @@
 <?php
 namespace App\Extension\Validation;
-class NdValidator extends \Illuminate\Validation\Validator {
+class NoValidator extends \Illuminate\Validation\Validator {
 
     public function validatePhone($attribute, $value, $parameters){
-        return preg_match('/[0-9]{4,5}\-?[0-9]{4}//', $value)>0;
+        return preg_match('/[0-9]{4,5}\-?[0-9]{4}/', $value)>0;
     }
     
     public function validatePhoneArea($attribute, $value, $parameters){
